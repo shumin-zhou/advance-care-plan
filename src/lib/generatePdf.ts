@@ -139,12 +139,14 @@ function drawPageHeader(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan, page
     const pi = plan.personalInfo;
     const identityY = A4_H - 45;
     const boxX = A4_W - 200 - MARGIN;
-    page.drawRectangle({ x: boxX, y: identityY - 52, width: 200, height: 58, color: WHITE, borderColor: LIGHT, borderWidth: 0.5 });
+    // 5 rows × 12pt spacing + padding = 72pt tall box
+    page.drawRectangle({ x: boxX, y: identityY - 64, width: 200, height: 70, color: WHITE, borderColor: LIGHT, borderWidth: 0.5 });
     drawSmallField(page, fonts, boxX + 6, identityY - 8,  "Surname:", pi.surname ?? "");
     drawSmallField(page, fonts, boxX + 6, identityY - 20, "First Name/s:", pi.firstNames ?? "");
-    drawSmallField(page, fonts, boxX + 6, identityY - 32, "NHI:", `${pi.nhiNumber ?? ""}   DOB: ${formatDob(pi.dateOfBirth)}`);
-    drawSmallField(page, fonts, boxX + 6, identityY - 44, "Phone:", `${pi.phone ?? ""}   Mobile: ${pi.mobile ?? ""}`);
-    ps.y = A4_H - 115;
+    drawSmallField(page, fonts, boxX + 6, identityY - 32, "NHI Number:", pi.nhiNumber ?? "");
+    drawSmallField(page, fonts, boxX + 6, identityY - 44, "Date of Birth:", formatDob(pi.dateOfBirth));
+    drawSmallField(page, fonts, boxX + 6, identityY - 56, "Phone:", `${pi.phone ?? ""}   Mobile: ${pi.mobile ?? ""}`);
+    ps.y = A4_H - 125;
   } else {
     ps.y = A4_H - 50;
   }

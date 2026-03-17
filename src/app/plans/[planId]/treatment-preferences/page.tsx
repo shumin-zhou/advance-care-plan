@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -29,18 +29,30 @@ export default function TreatmentPreferencesPage() {
 
   const { fields, append, remove } = useFieldArray({ control, name: "rows" });
 
+  // Only reset on initial mount to avoid destroying focus mid-tab
+  const initialised = useRef(false);
   useEffect(() => {
-    reset(plan.treatmentPreferences);
-    requestAnimationFrame(() => {
-      document.querySelectorAll("textarea").forEach((el) => {
-        el.style.height = "auto";
-        el.style.height = el.scrollHeight + "px";
+    if (!initialised.current) {
+      reset(plan.treatmentPreferences);
+      initialised.current = true;
+      requestAnimationFrame(() => {
+        document.querySelectorAll("textarea").forEach((el: any) => {
+          el.style.height = "auto";
+          el.style.height = el.scrollHeight + "px";
+        });
       });
-    });
+    }
   }, [plan.treatmentPreferences, reset]);
 
-  function onFieldBlur() {
+  // Debounced save — waits 600ms after last blur before saving
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveData = useCallback(() => {
     handleSubmit((data) => updateSection({ treatmentPreferences: data }))();
+  }, [handleSubmit, updateSection]);
+
+  function onFieldBlur() {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(saveData, 600);
   }
 
   return (
@@ -87,7 +99,7 @@ export default function TreatmentPreferencesPage() {
           <p style={{ margin: 0 }}>This section can feel confronting. Take it at your own pace. If you need support, call or text <strong>1737</strong> any time.</p>
         </div>
 
-        <form onBlur={onFieldBlur} onSubmit={handleSubmit((data) => updateSection({ treatmentPreferences: data }))} noValidate>
+        <form onSubmit={handleSubmit((data) => updateSection({ treatmentPreferences: data }))} noValidate>
 
           {/* Column headers */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8, padding: "0 2px" }}>
@@ -103,13 +115,13 @@ export default function TreatmentPreferencesPage() {
                     id={`rows.${index}.wouldOrWouldNotWant`}
                     placeholder="e.g. I would not want CPR…"
                     rows={3}
-                    {...register(`rows.${index}.wouldOrWouldNotWant`)}
+                    {...register(`rows.${index}.wouldOrWouldNotWant`)} onBlur={onFieldBlur}
                   />
                   <TextareaInput
                     id={`rows.${index}.inTheseCircumstances`}
                     placeholder="e.g. if I have no chance of recovery…"
                     rows={3}
-                    {...register(`rows.${index}.inTheseCircumstances`)}
+                    {...register(`rows.${index}.inTheseCircumstances`)} onBlur={onFieldBlur}
                   />
                 </div>
                 {fields.length > 1 && (
