@@ -73,6 +73,7 @@ function PlanCard({ plan, onDelete }: { plan: PlanSummary; onDelete: (id: string
 
 export default function HomePage() {
   const router = useRouter();
+  const [mounted, setMounted]     = useState(false);
   const [plans, setPlans]         = useState<PlanSummary[]>([]);
   const [loading, setLoading]     = useState(true);
   const [creating, setCreating]   = useState(false);
@@ -80,8 +81,12 @@ export default function HomePage() {
   const [error, setError]         = useState("");
 
   useEffect(() => {
+    setMounted(true);
     listPlans().then(p => { setPlans(p); setLoading(false); });
   }, []);
+
+  // Render nothing until client has hydrated — prevents server/client mismatch
+  if (!mounted) return null;
 
   async function handleCreate() {
     setCreating(true);

@@ -100,8 +100,25 @@ function TextareaInput({
   placeholder,
   error,
   rows = 3,
+  ref: externalRef,
   ...rest
-}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: string }) {
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: string; ref?: React.Ref<HTMLTextAreaElement> }) {
+  // Merge RHF ref with our resize ref — spreading {...register()} passes a ref
+  // that would otherwise overwrite the resize logic
+  function mergedRef(el: HTMLTextAreaElement | null) {
+    // Resize on mount
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    }
+    // Forward to RHF ref
+    if (typeof externalRef === "function") {
+      externalRef(el);
+    } else if (externalRef && typeof externalRef === "object") {
+      (externalRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+    }
+  }
+
   return (
     <div>
       <textarea
@@ -119,14 +136,21 @@ function TextareaInput({
           fontSize: "0.9rem",
           color: "#1c1917",
           outline: "none",
-          resize: "vertical",
+          resize: "none",
+          overflow: "hidden",
           transition: "border-color 0.15s",
         }}
+        ref={mergedRef}
         onFocus={(e) => {
           e.currentTarget.style.borderColor = "#c0392b";
         }}
         onBlur={(e) => {
           e.currentTarget.style.borderColor = error ? "#c0392b" : "#e7e5e4";
+        }}
+        onInput={(e) => {
+          const el = e.currentTarget;
+          el.style.height = "auto";
+          el.style.height = `${el.scrollHeight}px`;
         }}
         {...rest}
       />
@@ -217,6 +241,10 @@ function DatePicker({ id, value, onChange, error }: {
         id={id}
         type="button"
         onClick={() => setOpen(o => !o)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => !o); }
+        }}
         style={{
           width: "100%", boxSizing: "border-box" as const,
           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -224,7 +252,9 @@ function DatePicker({ id, value, onChange, error }: {
           border: `1.5px solid ${open ? "#c0392b" : error ? "#c0392b" : "#e7e5e4"}`,
           background: error ? "#fff8f7" : "#fff",
           fontFamily: "system-ui, sans-serif", fontSize: "0.9rem",
-          color: value ? "#1c1917" : "#a8a29e", cursor: "pointer", outline: "none",
+          color: value ? "#1c1917" : "#a8a29e", cursor: "pointer",
+          outline: open ? "2px solid #c0392b" : "none",
+          outlineOffset: 2,
         }}
       >
         <span>{value ? toDisplay(value) : "DD/MM/YYYY"}</span>
@@ -236,7 +266,11 @@ function DatePicker({ id, value, onChange, error }: {
       {error && <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: "#c0392b", margin: "4px 0 0 2px" }}>{error}</p>}
 
       {open && (
-        <div style={{
+        <div
+          role="dialog"
+          aria-label="Date picker"
+          onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); } }}
+          style={{
           position: "absolute" as const, top: "calc(100% + 6px)", left: 0, zIndex: 100,
           background: "#fff", borderRadius: 14, border: "1.5px solid #e7e5e4",
           boxShadow: "0 8px 24px rgba(0,0,0,0.12)", padding: 14, width: 272,
@@ -304,7 +338,10 @@ function DatePicker({ id, value, onChange, error }: {
               const isoDay = `${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
               const isToday = isoDay === todayStr;
               return (
-                <button key={i} type="button" onClick={() => selectDay(day)}
+                <button key={i} type="button"
+                  onClick={() => selectDay(day)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectDay(day); } }}
+                  tabIndex={0}
                   style={{
                     padding: "5px 0", borderRadius: 8,
                     border: isToday && !isSelected ? "1.5px solid #c0392b" : "1.5px solid transparent",
@@ -313,6 +350,7 @@ function DatePicker({ id, value, onChange, error }: {
                     color: isSelected ? "#fff" : isToday ? "#c0392b" : "#1c1917",
                     fontWeight: isSelected || isToday ? 700 : 400,
                     cursor: "pointer",
+                    outline: "none",
                   }}>
                   {day}
                 </button>
@@ -383,6 +421,13 @@ export default function PersonalInfoPage() {
   // Sync form if plan loads from IndexedDB after mount
   useEffect(() => {
     reset(plan.personalInfo);
+    // After reset populates the form, resize all textareas to fit their content
+    requestAnimationFrame(() => {
+      document.querySelectorAll<HTMLTextAreaElement>("textarea").forEach(el => {
+        el.style.height = "auto";
+        el.style.height = `${el.scrollHeight}px`;
+      });
+    });
   }, [plan.personalInfo, reset]);
 
   function onSubmit(data: PersonalInfo) {
@@ -416,6 +461,10 @@ export default function PersonalInfoPage() {
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             Home
+          </Link>
+          <Link href={`/plans/${planId}/epa`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
         </div>
 
@@ -530,6 +579,18 @@ export default function PersonalInfoPage() {
                 {...register("phone")}
               />
             </div>
+          </div>
+
+          {/* Email */}
+          <div style={{ marginBottom: 20 }}>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <TextInput
+              id="email"
+              type="email"
+              placeholder="e.g. jane@email.com"
+              error={errors.email?.message}
+              {...register("email")}
+            />
           </div>
 
           {/* Info note */}

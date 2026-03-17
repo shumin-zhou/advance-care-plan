@@ -48,6 +48,25 @@ function TextInput({ id, placeholder, ...rest }: React.InputHTMLAttributes<HTMLI
   );
 }
 
+function TextareaInput({ id, placeholder, ref: externalRef, ...rest }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { ref?: React.Ref<HTMLTextAreaElement> }) {
+  function mergedRef(el: HTMLTextAreaElement | null) {
+    if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; }
+    if (typeof externalRef === "function") externalRef(el);
+    else if (externalRef && typeof externalRef === "object")
+      (externalRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+  }
+  return (
+    <textarea id={id} placeholder={placeholder} rows={2}
+      style={{ width: "100%", boxSizing: "border-box" as const, padding: "10px 13px", borderRadius: 10, border: "1.5px solid #e7e5e4", background: "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", color: "#1c1917", outline: "none", resize: "none" as const, overflow: "hidden", lineHeight: 1.5 }}
+      ref={mergedRef}
+      onFocus={e => e.currentTarget.style.borderColor = "#c0392b"}
+      onBlur={e => e.currentTarget.style.borderColor = "#e7e5e4"}
+      onInput={(e) => { const el = e.currentTarget; el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; }}
+      {...rest}
+    />
+  );
+}
+
 export default function EndOfLifePage() {
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
   const { register, handleSubmit, reset, watch, setValue, control, formState: { errors } } = useForm<EndOfLifePreferences>({
@@ -55,7 +74,15 @@ export default function EndOfLifePage() {
     defaultValues: plan.endOfLifePreferences,
   });
 
-  useEffect(() => { reset(plan.endOfLifePreferences); }, [plan.endOfLifePreferences, reset]);
+  useEffect(() => {
+    reset(plan.endOfLifePreferences);
+    requestAnimationFrame(() => {
+      document.querySelectorAll<HTMLTextAreaElement>("textarea").forEach(el => {
+        el.style.height = "auto";
+        el.style.height = `${el.scrollHeight}px`;
+      });
+    });
+  }, [plan.endOfLifePreferences, reset]);
 
   const placeImportant = watch("placeOfDeathImportant");
   const placeChoice = watch("placeOfDeath");
@@ -89,6 +116,10 @@ export default function EndOfLifePage() {
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             Home
+          </Link>
+          <Link href={`/plans/${planId}/body-care`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
         </div>
 
@@ -158,12 +189,30 @@ export default function EndOfLifePage() {
 
                 {placeChoice === "atHome" && (
                   <div style={{ marginTop: 12 }}>
-                    <TextInput placeholder="Home address…" {...register("placeOfDeathAtHomeAddress")} onBlur={onFieldBlur} />
+                    {/* Copy from personal info button */}
+                    {plan.personalInfo?.address && (
+                      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setValue("placeOfDeathAtHomeAddress", plan.personalInfo.address ?? "");
+                            onFieldBlur();
+                          }}
+                          style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#c0392b", padding: 0, display: "flex", alignItems: "center", gap: 4 }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                          </svg>
+                          Copy from Personal Info
+                        </button>
+                      </div>
+                    )}
+                    <TextareaInput placeholder="Home address…" {...register("placeOfDeathAtHomeAddress")} onBlur={onFieldBlur} />
                   </div>
                 )}
                 {placeChoice === "other" && (
                   <div style={{ marginTop: 12 }}>
-                    <TextInput placeholder="Please describe…" {...register("placeOfDeathOther")} onBlur={onFieldBlur} />
+                    <TextareaInput placeholder="Please describe…" {...register("placeOfDeathOther")} onBlur={onFieldBlur} />
                   </div>
                 )}
               </div>

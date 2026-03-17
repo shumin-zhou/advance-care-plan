@@ -18,6 +18,7 @@ import {
   useEffect,
   useReducer,
   useRef,
+  useState,
   ReactNode,
 } from "react";
 
@@ -117,6 +118,7 @@ interface PlanProviderProps {
 
 export function PlanProvider({ planId, children, autoSaveDelay = 1500 }: PlanProviderProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [mounted, setMounted] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Keep a ref to current plan for use in callbacks without stale closures
   const planRef = useRef<AdvanceCarePlan>(state.plan);
@@ -124,6 +126,7 @@ export function PlanProvider({ planId, children, autoSaveDelay = 1500 }: PlanPro
 
   // ── Load on mount / planId change ──────────────────────────────────────
   useEffect(() => {
+    setMounted(true);
     async function init() {
       dispatch({ type: "LOAD_START" });
       try {
@@ -222,6 +225,10 @@ export function PlanProvider({ planId, children, autoSaveDelay = 1500 }: PlanPro
     importJson,
     clearError,
   };
+
+  // Don't render children until mounted — avoids server/client hydration mismatch
+  // since IndexedDB is only available in the browser
+  if (!mounted) return null;
 
   return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
 }

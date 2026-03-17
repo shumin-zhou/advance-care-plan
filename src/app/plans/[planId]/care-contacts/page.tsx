@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -39,10 +39,25 @@ export default function CareContactsPage() {
 
   const { fields, append, remove } = useFieldArray({ control, name: "contacts" });
 
-  useEffect(() => { reset(plan.careContacts); }, [plan.careContacts, reset]);
+  // Only reset on initial mount — not on every save (which would steal focus)
+  const initialised = useRef(false);
+  useEffect(() => {
+    if (!initialised.current) {
+      reset(plan.careContacts);
+      initialised.current = true;
+    }
+  }, [plan.careContacts, reset]);
+
+  // Debounced save — fires 600ms after the last field change
+  // Using a ref so the timer survives re-renders without causing them
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveData = useCallback(() => {
+    handleSubmit((data) => updateSection({ careContacts: data }))();
+  }, [handleSubmit, updateSection]);
 
   function onFieldBlur() {
-    handleSubmit((data) => updateSection({ careContacts: data }))();
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(saveData, 600);
   }
 
   return (
@@ -64,6 +79,10 @@ export default function CareContactsPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             Home
           </Link>
+          <Link href={`/plans/${planId}/will`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          </Link>
         </div>
 
         {/* Header */}
@@ -75,7 +94,7 @@ export default function CareContactsPage() {
           </p>
         </div>
 
-        <form onBlur={onFieldBlur} onSubmit={handleSubmit((data) => updateSection({ careContacts: data }))} noValidate>
+        <form onSubmit={handleSubmit((data) => updateSection({ careContacts: data }))} noValidate>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {fields.map((field, index) => (
               <div key={field.id} style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 16 }}>
@@ -95,11 +114,11 @@ export default function CareContactsPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                   <div>
                     <FieldLabel htmlFor={`contacts.${index}.firstName`}>First name</FieldLabel>
-                    <TextInput id={`contacts.${index}.firstName`} placeholder="Jane" {...register(`contacts.${index}.firstName`)} />
+                    <TextInput id={`contacts.${index}.firstName`} placeholder="Jane" {...register(`contacts.${index}.firstName`)} onBlur={onFieldBlur} />
                   </div>
                   <div>
                     <FieldLabel htmlFor={`contacts.${index}.lastName`}>Last name</FieldLabel>
-                    <TextInput id={`contacts.${index}.lastName`} placeholder="Smith" {...register(`contacts.${index}.lastName`)} />
+                    <TextInput id={`contacts.${index}.lastName`} placeholder="Smith" {...register(`contacts.${index}.lastName`)} onBlur={onFieldBlur} />
                   </div>
                 </div>
 
@@ -107,18 +126,18 @@ export default function CareContactsPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                   <div>
                     <FieldLabel htmlFor={`contacts.${index}.relationship`}>Relationship</FieldLabel>
-                    <TextInput id={`contacts.${index}.relationship`} placeholder="e.g. Daughter" {...register(`contacts.${index}.relationship`)} />
+                    <TextInput id={`contacts.${index}.relationship`} placeholder="e.g. Daughter" {...register(`contacts.${index}.relationship`)} onBlur={onFieldBlur} />
                   </div>
                   <div>
                     <FieldLabel htmlFor={`contacts.${index}.phone`}>Phone</FieldLabel>
-                    <TextInput id={`contacts.${index}.phone`} placeholder="021 123 456" {...register(`contacts.${index}.phone`)} />
+                    <TextInput id={`contacts.${index}.phone`} placeholder="021 123 456" {...register(`contacts.${index}.phone`)} onBlur={onFieldBlur} />
                   </div>
                 </div>
 
                 {/* Email */}
                 <div>
                   <FieldLabel htmlFor={`contacts.${index}.email`}>Email</FieldLabel>
-                  <TextInput id={`contacts.${index}.email`} placeholder="e.g. jane@email.com" {...register(`contacts.${index}.email`)} />
+                  <TextInput id={`contacts.${index}.email`} placeholder="e.g. jane@email.com" {...register(`contacts.${index}.email`)} onBlur={onFieldBlur} />
                 </div>
               </div>
             ))}

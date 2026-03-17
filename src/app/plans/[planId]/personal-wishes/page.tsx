@@ -19,7 +19,9 @@ function TextareaInput({ id, placeholder, error, rows = 5, ...rest }: React.Text
   return (
     <div>
       <textarea id={id} placeholder={placeholder} rows={rows}
-        style={{ width: "100%", boxSizing: "border-box" as const, padding: "10px 13px", borderRadius: 10, border: `1.5px solid ${error ? "#c0392b" : "#e7e5e4"}`, background: error ? "#fff8f7" : "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", color: "#1c1917", outline: "none", resize: "vertical" as const, lineHeight: 1.6 }}
+        style={{ width: "100%", boxSizing: "border-box" as const, padding: "10px 13px", borderRadius: 10, border: `1.5px solid ${error ? "#c0392b" : "#e7e5e4"}`, background: error ? "#fff8f7" : "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", color: "#1c1917", outline: "none", resize: "none" as const, lineHeight: 1.6, overflow: "hidden" }}
+        ref={(el) => { if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; } }}
+        onInput={(e) => { const el = e.currentTarget; el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; }}
         onFocus={e => e.currentTarget.style.borderColor = "#c0392b"}
         onBlur={e => e.currentTarget.style.borderColor = error ? "#c0392b" : "#e7e5e4"}
         {...rest}
@@ -36,7 +38,15 @@ export default function PersonalWishesPage() {
     defaultValues: plan.personalWishes,
   });
 
-  useEffect(() => { reset(plan.personalWishes); }, [plan.personalWishes, reset]);
+  useEffect(() => {
+    reset(plan.personalWishes);
+    requestAnimationFrame(() => {
+      document.querySelectorAll("textarea").forEach((el) => {
+        el.style.height = "auto";
+        el.style.height = el.scrollHeight + "px";
+      });
+    });
+  }, [plan.personalWishes, reset]);
 
   function onFieldBlur() {
     handleSubmit((data) => updateSection({ personalWishes: data }))();
@@ -65,6 +75,10 @@ export default function PersonalWishesPage() {
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             Home
+          </Link>
+          <Link href={`/plans/${planId}/end-of-life`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
         </div>
 
