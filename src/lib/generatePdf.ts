@@ -333,15 +333,39 @@ function drawPage3(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
       x: MARGIN, y, size: 8.5, font: fonts.bold, color: DARK,
     });
     y -= 14;
-    const places: Record<string, string> = {
-      atHome:     `At home: ${eol.placeOfDeathAtHomeAddress ?? ""}`,
-      inHospice:  "In Hospice",
-      inHospital: "In hospital",
-      other:      `Other: ${eol.placeOfDeathOther ?? ""}`,
-    };
-    for (const [key, label] of Object.entries(places)) {
-      drawCheckbox(page, fonts, MARGIN, y, label, eol.placeOfDeath === key);
-      y -= 13;
+
+    // At home — draw checkbox then address on separate indented lines
+    drawCheckbox(page, fonts, MARGIN, y, "At home", eol.placeOfDeath === "atHome");
+    y -= 13;
+    if (eol.placeOfDeath === "atHome" && eol.placeOfDeathAtHomeAddress) {
+      const addrLines = eol.placeOfDeathAtHomeAddress.split("\n").filter(Boolean);
+      for (const line of addrLines) {
+        // Wrap each line in case it is long
+        const wrapped = line.trim();
+        const lineWidth = fonts.regular.widthOfTextAtSize(wrapped, 8);
+        if (lineWidth <= CONTENT_W - 20) {
+          page.drawText(wrapped, { x: MARGIN + 20, y, size: 8, font: fonts.regular, color: DARK });
+          y -= 11;
+        } else {
+          y = drawWrappedText(page, fonts.regular, wrapped, MARGIN + 20, y, CONTENT_W - 20, 8, DARK);
+        }
+      }
+    }
+
+    // Other fixed options
+    drawCheckbox(page, fonts, MARGIN, y, "In Hospice",  eol.placeOfDeath === "inHospice");
+    y -= 13;
+    drawCheckbox(page, fonts, MARGIN, y, "In hospital", eol.placeOfDeath === "inHospital");
+    y -= 13;
+
+    // Other (free text)
+    drawCheckbox(page, fonts, MARGIN, y, "Other", eol.placeOfDeath === "other");
+    y -= 13;
+    if (eol.placeOfDeath === "other" && eol.placeOfDeathOther) {
+      const otherLines = eol.placeOfDeathOther.split("\n").filter(Boolean);
+      for (const line of otherLines) {
+        y = drawWrappedText(page, fonts.regular, line.trim(), MARGIN + 20, y, CONTENT_W - 20, 8, DARK);
+      }
     }
   }
   y -= 8;
