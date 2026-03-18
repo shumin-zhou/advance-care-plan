@@ -1,0 +1,502 @@
+# Product Requirements Document
+## My Advance Care Plan — Web App
+
+**Version:** 1.4  
+**Platform:** Web (desktop & mobile browser; responsive)  
+**Future Platform:** Native iOS app (v2.0)  
+**Audience:** Adults planning end-of-life care preferences; family/whānau assisting a loved one; healthcare professionals
+
+---
+
+## 1. Overview
+
+### 1.1 Purpose
+A responsive web app that digitises the "My Advance Care Plan" (Our Voice / Tō Tātou Reo) form, enabling users to create, store, update, and share their advance care preferences securely from any browser. Multiple people can manage their plans on a single shared device. The web app serves as the foundation for a future native iOS app.
+
+### 1.2 Problem Statement
+The current process relies on a paper-based 4-page form. This creates friction around storage, updates, sharing with healthcare providers, and accessibility in urgent medical situations. A digital solution removes these barriers while preserving the sensitivity and personal nature of the document.
+
+### 1.3 Goals
+- Allow multiple people to each maintain their own Advance Care Plan on a shared device
+- Allow users to complete the full plan digitally, in their own time, from any device
+- Enable easy updates at any point as wishes change
+- Provide secure storage with optional sharing (PDF export, healthcare provider forwarding)
+- Validate UX assumptions and gather user feedback before committing to a native iOS build
+
+### 1.4 Web-First Rationale
+Building a web app first allows the team to:
+- Ship faster with a single codebase across all devices
+- Gather real user feedback before investing in native development
+- Avoid App Store review risk on a health-sensitive product
+- Reuse form logic, data models, and PDF generation in the eventual iOS app
+
+---
+
+## 2. Target Users
+
+| User | Description |
+|---|---|
+| **Primary** | Adults (50+) completing their own advance care plan |
+| **Secondary** | Family/whānau assisting a loved one — may manage plans for multiple people on one device |
+| **Tertiary** | Healthcare professionals (GPs, nurses, hospice staff) reviewing a plan |
+
+---
+
+## 3. Features & Requirements
+
+### 3.1 Plan Selector (Home Screen)
+The home screen is a plan list, not a single plan view. It allows one device to hold plans for multiple people.
+
+- Lists all plans stored on the device, sorted by most recently updated
+- Each plan card shows the person's name and last updated date with links to open or export
+- **Create new plan** button — generates a new UUID-keyed plan and navigates to Personal Information
+- **Import from backup** button — restores a plan from a previously exported `.json` file (always creates a new record with a fresh UUID)
+- **Delete** action per plan card — requires inline confirmation before deleting
+- Privacy notice: all plans are stored locally on this device; nothing is sent to any server unless an account is created
+- Empty state: when no plans exist, shows a prompt to create the first plan or import a backup
+- Hydration guard: renders nothing until client has mounted (prevents server/client mismatch from IndexedDB being browser-only)
+
+---
+
+### 3.2 Per-Plan Home Screen
+Each plan has its own home screen at `/plans/[planId]`.
+
+- Displays the plan owner's name (derived from Personal Information once filled)
+- "← All plans" back link to the plan selector
+- Circular progress ring showing 0–100% completion
+- Section list with completion tick per section
+- Last updated date and save status indicator (auto-save / unsaved changes / saving…)
+- Backup (JSON export) button
+- Sticky "Continue" bar pointing to the first incomplete section, or "Export Plan" when all sections are complete
+- Disclaimer: plan will only be used if the person cannot communicate their wishes directly
+
+---
+
+### 3.3 Personal Information
+Fields:
+- Surname (required)
+- First name(s) (required)
+- NHI Number
+- Date of Birth — calendar date picker (DD/MM/YYYY display; YYYY-MM-DD stored); month and year dropdowns for quick navigation; year range 1900 to current year; keyboard accessible (Enter/Space opens, Escape closes)
+- Address (multi-line auto-resizing textarea)
+- Mobile (shown first)
+- Home Phone
+- Email
+
+---
+
+### 3.4 Enduring Power of Attorney
+Supports multiple EPA attorneys, each assignable to one of two types:
+
+**EPA types:**
+- Personal Care and Welfare — makes decisions about health and daily life
+- Property — manages finances and assets
+
+**Per attorney, fields:**
+- EPA Type (dropdown: Personal Care and Welfare / Property)
+- First name(s), Last name
+- Relationship
+- Address (multi-line auto-resizing textarea)
+- Mobile (shown first), Home Phone
+- Email
+
+**Behaviour:**
+- Attorneys are grouped on screen by type under two labelled sections
+- Add/remove attorneys within each type independently; no fixed maximum
+- Empty state shows quick-start buttons to add the first attorney of each type
+- "Import from Contacts" button (coming soon — Contact Picker API on supported mobile browsers)
+
+---
+
+### 3.5 People to Include in Care Decisions
+Up to 4 contacts, each with:
+- First name, Last name
+- Relationship
+- Phone
+- Email
+- Add/remove contacts dynamically; minimum 1 shown
+- Save is debounced (600ms) so tabbing between fields does not trigger re-renders that break focus
+
+---
+
+### 3.6 Will
+- Toggle: Has the user made a Will? (Yes / No)
+- If Yes: free-text field for where the Will is held
+
+---
+
+### 3.7 Personal Wishes
+Three multi-line auto-resizing free-text fields:
+1. **What is important to me** — hopes, fears, practical matters, spiritual care, family concerns
+2. **What makes life meaningful to me** — values, people, pets, spiritual/emotional needs
+3. **What I want my family and friends to know and remember**
+
+Emotional support prompt displayed at top of section: acknowledges the section may be confronting, includes the Need to Talk? helpline (1737).
+
+---
+
+### 3.8 End-of-Life Preferences
+
+**When I am dying, the following are important to me** (multi-select checkboxes):
+- Keep me comfortable
+- Take out tubes and lines that are not adding to my comfort
+- Let my family and friends be with me
+- Offer me something to eat and drink
+- Stop medications that do not add to my comfort
+- Attend to my spiritual needs
+- Other (free-text)
+
+**Place of death preference:**
+- Toggle: Is the place I die important to me? (Yes / No)
+- If Yes, single-select: At home / In Hospice / In hospital / Other (free-text)
+- "At home" selection reveals an auto-resizing address field with a **"Copy from Personal Info"** button that pre-fills the address from the Personal Information section (only shown if a personal info address has been entered)
+
+Emotional support prompt displayed at top of section.
+
+---
+
+### 3.9 Body Care & Funeral Wishes
+- Burial preference: Buried / Cremated (radio buttons)
+- Free-text auto-resizing: end-of-life ceremony or funeral wishes
+
+---
+
+### 3.10 Organ Donation
+- Toggle: Willing to donate organs and/or tissues for transplantation? (Yes / No)
+- Free-text auto-resizing: other comments
+- Informational note linking to the NZ Organ Donation register (donor.health.nz)
+
+---
+
+### 3.11 Specific Treatment and Care Preferences
+- Repeating two-column table: "I would / would not want" | "In these circumstances"
+- Both columns use auto-resizing textareas
+- Up to 10 rows; add/remove rows dynamically
+- Label: *Please fill out with the help of your Doctor or Nurse*
+- Emotional support prompt and doctor advisory displayed at top of section
+- Save is debounced (600ms) so tabbing between the two columns does not trigger re-renders that break focus
+
+---
+
+### 3.12 Signature & Acknowledgement
+
+**Legal status banner (non-dismissable):**
+Displayed before the signature area. States that the digital plan is a record of preferences only and is not legally binding under NZ law. Instructs the user to print, sign by hand, and have it witnessed by a health professional for clinical use.
+
+**User must acknowledge all 4 statements before signing:**
+1. This is a record of preferences to guide the healthcare team.
+2. It will only be used when the user cannot make decisions for themselves.
+3. Medically futile/inappropriate treatments will not be administered even if expressed.
+4. The record may be held electronically and shared with other health care providers.
+
+**Signature capture — two modes, toggled by the user:**
+- **Draw mode** — HTML Canvas; mouse, touch, or stylus; crosshair cursor; retina-safe via `devicePixelRatio` scaling
+- **Type mode** — text input renders the typed name onto the canvas in italic serif font, scaled to fit; saves as a PNG data URL identically to a drawn signature
+
+Signature date: calendar date picker (auto-populated with today's date).
+
+**Witness (Health Professional) — completed on the printed PDF:**
+- Fields captured in-app for record only: First name(s), Last name, Designation, Email
+- Date witnessed: calendar date picker
+- Note explains that the witness section is completed on the printed PDF with a health professional present
+
+**Completion prompt:** once all 4 acknowledgements are ticked and a signature is drawn/typed, a green banner appears with a direct "Export PDF" link.
+
+---
+
+### 3.13 PDF Export
+
+**Export page features:**
+- Plan completion summary with progress bar and clickable links to any incomplete sections
+- Download PDF button — generates and triggers browser download
+- Print button — generates PDF and opens browser print dialog via hidden iframe
+- Save backup (.json) — exports plan as a JSON file for recovery
+- "What to do next" checklist — 6 steps covering print, sign, witness, share, and review
+
+**PDF generation (`pdf-lib`, client-side):**
+- 4 pages mirroring the official form layout
+- Red header bar with page number on every page; patient identity block top-right on pages 2–4 showing Surname, First Name/s, NHI Number, Date of Birth (each on its own line), and Phone/Mobile
+- Noto Sans font (via `@fontsource/noto-sans`, served from `/public/fonts/`) for full Unicode support including Māori macron vowels (ā ē ī ō ū); `@pdf-lib/fontkit` required
+- Helvetica (built-in) used for section headings to avoid OpenType ligature substitution issues (`fi`, `ll` etc.)
+- Section headings auto-scale font size down if text is too wide for the heading band
+- Address fields split on newline characters before rendering (pdf-lib ignores `\n` natively)
+- Page 1: cover + personal information (Mobile first, Home Phone second)
+- Page 2: EPA attorneys (grouped by type, with email), care contacts (with email), will, personal wishes
+- Page 3: end-of-life preferences (checkboxes), body care, organ donation
+- Page 4: treatment preferences table + signature block (actual signature image embedded via `embedPng`) + witness fields (with email)
+- Signature date formatted as DD/MM/YYYY in the PDF
+
+---
+
+### 3.14 Storage & Security
+
+**Guest mode (no account) — current implementation:**
+- All plans stored in `IndexedDB` (via `idb` library), keyed by UUID
+- DB schema version 2 — supports multiple plans per device
+- Data never leaves the device
+- Warning displayed: data will be lost if browser storage is cleared
+- JSON backup export/import available for recovery
+- `clearAllData()` function available for settings page "Clear all data" and corrupt DB recovery
+
+**Multi-plan IndexedDB schema:**
+
+| Store | Key | Value |
+|---|---|---|
+| `plans` | UUID string | `{ id, plan, savedAt }` |
+| `history` | Auto-increment int | `{ id, planId, plan, savedAt, version }` indexed by `planId` |
+
+- Each save bumps the plan version and snapshots to history
+- Last 5 versions retained per plan; older versions trimmed automatically
+- `getAllFromIndex` calls have in-memory fallback filter in case index is unavailable during partial DB migration
+- `dbPromise` resets on error so subsequent calls can retry
+- `blocked`/`blocking` DB upgrade handlers prevent stale connections from blocking version migration
+- Schema migration handles plans saved under older schema versions (single-EPA object → `attorneys` array; missing `email` fields)
+
+**Authenticated mode (future):**
+- Account creation via email + password or passkey (WebAuthn)
+- Data stored server-side, encrypted at rest (AES-256)
+- HTTPS enforced; all API traffic TLS 1.3+
+- Session management via secure, `HttpOnly` cookies
+
+---
+
+### 3.15 Updates & Versioning
+- Users can edit any section at any time
+- Each save creates a timestamped version history (last 5 versions retained per plan)
+- Per-plan home screen shows date last updated
+- Auto-save debounced at 1.5 seconds after any field change (PlanContext level)
+- Field-level saves on Care Contacts and Treatment Preferences use a separate 600ms debounce to prevent focus loss during tab navigation
+
+---
+
+### 3.16 Section Navigation
+Every section page has a four-item top navigation bar:
+
+```
+← Previous  |  Saving… / All saved  |  ⌂ Home  |  Next →
+```
+
+- **← Previous** — navigates to the preceding section (absent on Personal Information, the first section)
+- **Save status** — shows "Saving…", "Unsaved changes", or "All saved"
+- **⌂ Home** — navigates to the plan selector (`/`)
+- **Next →** — navigates directly to the next section without requiring a save action
+
+A sticky **"Save & Continue"** button in the bottom bar also advances to the next section and explicitly saves first.
+
+---
+
+### 3.17 Contacts Integration
+
+**Applies to:** Section 3.4 (EPA) and Section 3.5 (Care Decision contacts)
+
+#### Behaviour
+- Each contact entry surfaces an **"Import from Contacts"** button alongside the manual fields
+- Uses the browser-native Contact Picker API (`navigator.contacts.select()`)
+- On selection, fields are auto-mapped:
+
+| Contacts field | Form field |
+|---|---|
+| Given name | First name(s) |
+| Family name | Last name |
+| Address | Address (EPA only) |
+| Phone labelled "mobile" | Mobile |
+| Phone labelled "home" | Home phone |
+| Phone labelled "work" | Daytime phone (EPA only) |
+| First phone if no label match | Primary phone field |
+
+- All imported values are editable after import — contact is copied, not linked
+- Relationship and email fields are never auto-filled; must be entered manually
+
+#### Browser Support & Fallback
+- Contact Picker API supported on: Chrome for Android 80+, Safari iOS 16+
+- On unsupported browsers: button is hidden; manual entry only
+- Feature detection via `'contacts' in navigator && 'ContactsManager' in window`
+
+#### Privacy
+- Browser prompts for permission each time the picker is opened — no persistent access
+- No contact data stored beyond what the user explicitly imports
+
+#### Edge Cases
+- Contact with no phone: import name/address only; phone fields left blank
+- Contact with 3+ phones: inline disambiguation UI to assign numbers to correct fields
+- Contact with no address (EPA): address fields left blank for manual entry
+
+---
+
+### 3.18 Date Pickers
+All date fields use a consistent NZ-format calendar picker:
+
+**Personal Information — Date of Birth:**
+- Month dropdown (Jan–Dec) and year dropdown (1900 to current year) for quick navigation
+- Day grid (Su–Sa) with correct first-day-of-week alignment
+- Selected date highlighted in red; today outlined in red
+- Stores as ISO `YYYY-MM-DD`; displays as `DD/MM/YYYY`
+- Default view opens at current year minus 30 (practical for date of birth)
+- Keyboard accessible: Enter/Space opens and selects, Escape closes, calendar has `role="dialog"`
+
+**Signature — Signature Date and Date Witnessed:**
+- Same calendar UI without year dropdown (dates are near present)
+- "Today" shortcut button
+- Auto-populated with today's date on first open
+
+---
+
+### 3.19 Auto-Resizing Text Fields
+All multi-line text fields (textareas) across the app automatically grow to fit their content:
+
+- `resize: none` — manual drag handle removed; height is managed programmatically
+- `overflow: hidden` — prevents scrollbar flash during resize
+- `ref` callback resizes the element immediately on mount — existing saved content is shown in full when a page loads
+- `onInput` handler resizes on every keystroke as the user types
+- After `reset()` populates form fields from saved data, a `requestAnimationFrame` callback resizes all textareas on the page
+- RHF `register()` ref is merged with the resize ref so both operate correctly on the same element
+
+Applies to: address fields (Personal Info, EPA), personal wishes (3 fields), funeral wishes, organ donation comments, treatment preferences (both columns), end-of-life at-home address.
+
+---
+
+### 3.20 Keyboard & Tab Navigation
+All form pages are fully keyboard-navigable:
+
+- Tab moves through fields in logical DOM order
+- Form-level `onBlur` is avoided on pages with `useFieldArray` (Care Contacts, Treatment Preferences) — it caused `reset()` to fire mid-tab, destroying focus. These pages use per-field `onBlur` with a debounced save instead
+- `useEffect` reset only runs once on initial mount (via `initialised` ref) to prevent re-renders destroying focus during a session
+- Date picker: Enter/Space opens, Escape closes at both trigger and popover level
+- Date picker day buttons are tabbable within the open popover
+
+---
+
+### 3.21 Local Network Access (Development)
+To serve the app to other devices on the local network during development:
+
+- Next.js dev server started with `--hostname 0.0.0.0` to bind all interfaces
+- `allowedDevOrigins` configured in `next.config.ts` with the local subnet (e.g. `"192.168.*.*"`)
+- Devices access via `http://` (not `https://`) — e.g. `http://192.168.x.x:3000`
+- If a browser auto-upgrades to HTTPS, clear the HSTS entry via `chrome://net-internals/#hsts`
+
+---
+
+### 3.22 Responsive Design & Accessibility
+- Fully responsive: optimised for desktop (1024px+), tablet (768px), and mobile (375px+)
+- Large tap targets (minimum 44×44px) for older users on mobile
+- WCAG 2.1 AA compliance: keyboard navigable, sufficient colour contrast, screen reader support
+- `<label>` elements correctly associated with all inputs
+- Progress indicator showing completion status across all form sections
+- Auto-save indicator in top navigation bar on every section page
+- Hydration guards on all client-only components prevent server/client mismatch errors when accessed from other devices on the network
+
+---
+
+## 4. Information Architecture
+
+```
+Web App
+├── / — Plan Selector (home screen)
+│   ├── Create new plan → /plans/[planId]/personal-info
+│   └── Import backup (.json)
+└── /plans/[planId]/
+    ├── (index) — Per-plan home (progress, section list, continue bar)
+    ├── personal-info
+    ├── epa
+    ├── care-contacts
+    ├── will
+    ├── personal-wishes
+    ├── end-of-life
+    ├── body-care
+    ├── organ-donation
+    ├── treatment-preferences
+    ├── signature
+    └── export
+```
+
+Each `/plans/[planId]/*` route is wrapped in a `PlanProvider` layout that loads and saves the correct plan by UUID. `params` is unwrapped with `React.use()` (Next.js 15 requirement before accessing `params.planId`).
+
+---
+
+## 5. Tech Stack
+
+| Layer | Choice | Rationale |
+|---|---|---|
+| **Framework** | Next.js 15 (App Router) + TypeScript | File-based routing, layout nesting for per-plan context, easy Vercel deploy |
+| **Styling** | Inline styles (no Tailwind) | Avoids class/style conflicts that caused rendering issues; full control |
+| **Form state** | React Hook Form + Zod | Validation, schema sharing; `useFieldArray` for dynamic rows |
+| **PDF generation** | `pdf-lib` + `@pdf-lib/fontkit` | Client-side; no server round-trip; works offline |
+| **PDF fonts** | `@fontsource/noto-sans` (served from `/public/fonts/`) | Full Unicode incl. Māori macrons; avoids CDN/CORS issues |
+| **Signature canvas** | Custom HTML Canvas component | Lightweight; supports Draw and Type modes; no extra dependency |
+| **Storage** | `IndexedDB` via `idb` v2 schema | Multi-plan; larger capacity than localStorage; structured data |
+| **State management** | React Context (`PlanContext`) + `useReducer` | Plan load/save/auto-save; completion percentage; section status |
+| **Backend (future)** | Next.js API routes | Single repo; easy server-side auth and sync |
+| **Database (future)** | PostgreSQL | Relational; good for versioned plan history |
+| **Auth (future)** | Auth.js (NextAuth) | Passkey + email/password |
+| **Hosting** | Vercel or Fly.io (NZ/AU region) | HIPC data residency compliance |
+
+---
+
+## 6. Non-Functional Requirements
+
+| Category | Requirement |
+|---|---|
+| **Accessibility** | WCAG 2.1 AA; keyboard navigable; screen reader tested |
+| **Privacy** | Complies with NZ Privacy Act 2020 and Health Information Privacy Code 2020 (HIPC); no third-party analytics or ad SDKs; DPIA required before production data handling |
+| **Data residency** | All PII (NHI numbers, health preferences, EPA details) must be stored on infrastructure physically located in New Zealand or Australia (acceptable under HIPC where NZ-region unavailable, subject to legal confirmation) |
+| **Performance** | Lighthouse score ≥ 90; PDF generation < 3 seconds on mid-range device |
+| **Browser Support** | Chrome 100+, Safari 15.4+, Firefox 100+, Edge 100+ |
+| **Mobile Web** | Fully usable on iOS Safari and Android Chrome |
+| **Offline** | Core form fully usable offline (IndexedDB; no network dependency) |
+| **Localisation** | English (NZ) default; Māori (te reo) in v1.1 |
+| **Security** | HTTPS only in production; OWASP Top 10 mitigations; no PII in URLs or query strings |
+| **Network (dev)** | Local network access via `--hostname 0.0.0.0`; `allowedDevOrigins` configured; HTTP only on LAN |
+
+---
+
+## 7. Out of Scope (v1.0 Web App)
+- Native iOS / Android app
+- Direct EHR / health system integration
+- Server-side authentication and sync (currently guest/IndexedDB only)
+- Māori language interface
+- Real-time collaboration
+- Account-based plan sharing between devices
+
+---
+
+## 8. Future: iOS App (v2.0)
+Once the web app has validated the UX and gathered user feedback, the iOS app will be built with these advantages:
+
+- Zod validation schemas inform the Swift data model
+- PDF generation logic portable to Swift via `PDFKit`
+- Native Contacts integration via `CNContactPickerViewController` (replaces Contact Picker API)
+- Native signature capture via `PencilKit` (replaces HTML Canvas)
+- Offline-first storage with Core Data (replacing IndexedDB)
+- Face ID / Touch ID via `LocalAuthentication`
+- iOS Lock Screen widget for emergency access to plan summary
+
+---
+
+## 9. Launch Prerequisites
+The following must be completed before v1.0 ships:
+
+1. **Legal** — obtain written legal advice on the standing of a digitally-signed advance care plan under NZ law (Protection of Personal and Property Rights Act 1988). The digital signature disclaimer banner wording must be reviewed and approved by a NZ health law practitioner.
+
+2. **Privacy/Compliance** — complete a Data Protection Impact Assessment (DPIA) covering NHI number handling, health preference data, and HIPC 2020 Rules 5, 10, and 11. Confirm whether AU-region hosting satisfies HIPC or whether NZ-region is required. Provision infrastructure only after DPIA is complete.
+
+3. **Clinical Safety** — submit crisis pathway content (helpline numbers, support panel wording, and contextual prompts on Personal Wishes, End-of-Life, and Treatment Preferences sections) for review and approval by a NZ clinical psychologist or palliative care specialist. Establish a quarterly process to verify helpline numbers remain current.
+
+---
+
+## 10. Success Metrics
+- Plan completion rate (% of plans that reach the Signature screen)
+- PDF export rate (% of completed plans exported)
+- Plans per device (indicates family/whānau multi-person use)
+- Monthly active devices retaining and updating plans
+- Guest → account conversion rate (once auth is implemented)
+- User satisfaction score (post-completion survey)
+
+---
+
+## 11. Open Questions
+1. Should the app require a healthcare professional witness to countersign digitally, or is a downloaded+printed PDF acceptable for clinical use in NZ? *(Legal advice required — see Section 9)*
+2. What is the legal standing of a digitally signed advance care plan in NZ? *(Legal advice required — see Section 9)*
+3. Is NHI Number format validation (checksum) required?
+4. Should the backend be hosted in NZ to satisfy data residency expectations for health data? *(HIPC compliance required — see Section 9)*
+5. Should there be a PIN or device-lock option to prevent unauthorised access to plans on a shared device (e.g. family tablet)?
+6. Should completed plans be shareable between devices without an account (e.g. via QR code or share link)?
