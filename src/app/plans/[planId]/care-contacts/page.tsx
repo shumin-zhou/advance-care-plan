@@ -7,10 +7,10 @@ import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
 import { careContactsSchema, CareContacts } from "@/lib/schema";
 
-function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
+function FieldLabel({ htmlFor, required, children }: { htmlFor: string; required?: boolean; children: React.ReactNode }) {
   return (
     <label htmlFor={htmlFor} style={{ display: "block", fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, color: "#57534e", marginBottom: 6, letterSpacing: "0.02em", textTransform: "uppercase" as const }}>
-      {children}
+      {children}{required && <span style={{ color: "#c0392b", marginLeft: 2 }}>*</span>}
     </label>
   );
 }
@@ -35,6 +35,8 @@ export default function CareContactsPage() {
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<CareContacts>({
     resolver: zodResolver(careContactsSchema),
     defaultValues: plan.careContacts,
+    mode: "onBlur",
+    reValidateMode: "onBlur",
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "contacts" });
@@ -55,9 +57,17 @@ export default function CareContactsPage() {
     handleSubmit((data) => updateSection({ careContacts: data }))();
   }, [handleSubmit, updateSection]);
 
-  function onFieldBlur() {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(saveData, 600);
+  // Merge RHF's register onBlur with our debounced save
+  function reg(name: any) {
+    const r = register(name);
+    return {
+      ...r,
+      onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+        r.onBlur(e); // RHF validation
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(saveData, 600);
+      },
+    };
   }
 
   return (
@@ -75,9 +85,13 @@ export default function CareContactsPage() {
             {status === "saving" ? "Saving…" : isDirty ? "Unsaved changes" : "All saved"}
           </span>
 
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+          <Link href={`/plans/${planId}`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
+            Plan
+          </Link>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#a8a29e", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-            Home
+            All Plans
           </Link>
           <Link href={`/plans/${planId}/will`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             Next
@@ -113,31 +127,31 @@ export default function CareContactsPage() {
                 {/* Name row */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                   <div>
-                    <FieldLabel htmlFor={`contacts.${index}.firstName`}>First name</FieldLabel>
-                    <TextInput id={`contacts.${index}.firstName`} placeholder="Jane" {...register(`contacts.${index}.firstName`)} onBlur={onFieldBlur} />
+                    <FieldLabel htmlFor={`contacts.${index}.firstName`} required>First name</FieldLabel>
+                    <TextInput id={`contacts.${index}.firstName`} placeholder="Jane" error={(errors.contacts?.[index] as any)?.firstName?.message} {...reg(`contacts.${index}.firstName`)} />
                   </div>
                   <div>
-                    <FieldLabel htmlFor={`contacts.${index}.lastName`}>Last name</FieldLabel>
-                    <TextInput id={`contacts.${index}.lastName`} placeholder="Smith" {...register(`contacts.${index}.lastName`)} onBlur={onFieldBlur} />
+                    <FieldLabel htmlFor={`contacts.${index}.lastName`} required>Last name</FieldLabel>
+                    <TextInput id={`contacts.${index}.lastName`} placeholder="Smith" error={(errors.contacts?.[index] as any)?.lastName?.message} {...reg(`contacts.${index}.lastName`)} />
                   </div>
                 </div>
 
                 {/* Relationship + phone row */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                   <div>
-                    <FieldLabel htmlFor={`contacts.${index}.relationship`}>Relationship</FieldLabel>
-                    <TextInput id={`contacts.${index}.relationship`} placeholder="e.g. Daughter" {...register(`contacts.${index}.relationship`)} onBlur={onFieldBlur} />
+                    <FieldLabel htmlFor={`contacts.${index}.relationship`} required>Relationship</FieldLabel>
+                    <TextInput id={`contacts.${index}.relationship`} placeholder="e.g. Daughter" error={(errors.contacts?.[index] as any)?.relationship?.message} {...reg(`contacts.${index}.relationship`)} />
                   </div>
                   <div>
-                    <FieldLabel htmlFor={`contacts.${index}.phone`}>Phone</FieldLabel>
-                    <TextInput id={`contacts.${index}.phone`} placeholder="021 123 456" {...register(`contacts.${index}.phone`)} onBlur={onFieldBlur} />
+                    <FieldLabel htmlFor={`contacts.${index}.phone`} required>Phone</FieldLabel>
+                    <TextInput id={`contacts.${index}.phone`} placeholder="021 123 456" error={(errors.contacts?.[index] as any)?.phone?.message} {...reg(`contacts.${index}.phone`)} />
                   </div>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <FieldLabel htmlFor={`contacts.${index}.email`}>Email</FieldLabel>
-                  <TextInput id={`contacts.${index}.email`} placeholder="e.g. jane@email.com" {...register(`contacts.${index}.email`)} onBlur={onFieldBlur} />
+                  <FieldLabel htmlFor={`contacts.${index}.email`} required>Email</FieldLabel>
+                  <TextInput id={`contacts.${index}.email`} placeholder="e.g. jane@email.com" error={(errors.contacts?.[index] as any)?.email?.message} {...reg(`contacts.${index}.email`)} />
                 </div>
               </div>
             ))}

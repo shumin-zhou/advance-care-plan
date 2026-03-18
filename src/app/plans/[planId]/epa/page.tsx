@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
@@ -17,19 +18,22 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.Re
   );
 }
 
-function TextInput({ id, placeholder, type = "text", value, onChange, onBlur }: {
+function TextInput({ id, placeholder, type = "text", value, onChange, onBlur, error }: {
   id: string; placeholder?: string; type?: string;
-  value?: string; onChange?: (v: string) => void; onBlur?: () => void;
+  value?: string; onChange?: (v: string) => void; onBlur?: () => void; error?: string;
 }) {
   return (
-    <input
-      id={id} type={type} placeholder={placeholder} value={value ?? ""} autoComplete="off"
-      onChange={e => onChange?.(e.target.value)}
-      onBlur={onBlur}
-      style={{ width: "100%", boxSizing: "border-box" as const, padding: "9px 11px", borderRadius: 8, border: "1.5px solid #e7e5e4", background: "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", color: "#1c1917", outline: "none" }}
-      onFocus={e => e.currentTarget.style.borderColor = "#c0392b"}
-      onBlurCapture={e => e.currentTarget.style.borderColor = "#e7e5e4"}
-    />
+    <div>
+      <input
+        id={id} type={type} placeholder={placeholder} value={value ?? ""} autoComplete="off"
+        onChange={e => onChange?.(e.target.value)}
+        onBlur={onBlur}
+        style={{ width: "100%", boxSizing: "border-box" as const, padding: "9px 11px", borderRadius: 8, border: `1.5px solid ${error ? "#c0392b" : "#e7e5e4"}`, background: error ? "#fff8f7" : "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", color: "#1c1917", outline: "none" }}
+        onFocus={e => e.currentTarget.style.borderColor = "#c0392b"}
+        onBlurCapture={e => e.currentTarget.style.borderColor = error ? "#c0392b" : "#e7e5e4"}
+      />
+      {error && <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: "#c0392b", margin: "4px 0 0 2px" }}>{error}</p>}
+    </div>
   );
 }
 
@@ -56,7 +60,7 @@ function TextareaInput({ id, placeholder, value, onChange, onBlur }: {
 // ---------------------------------------------------------------------------
 
 function emptyAttorney(type: EPAType): EPAPerson {
-  return { firstNames: "", lastName: "", relationship: "", address: "", homePhone: "", mobilePhone: "", email: "", type };
+  return { firstNames: "", lastName: "", relationship: "", address: "", phone: "", email: "", type };
 }
 
 // ---------------------------------------------------------------------------
@@ -71,9 +75,30 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
   onRemove: () => void;
   onBlur: () => void;
 }) {
+  const [touched, setTouched] = React.useState<Partial<Record<keyof EPAPerson, boolean>>>({});
+
   function set(field: keyof EPAPerson, value: string) {
     onChange({ ...attorney, [field]: value });
   }
+
+  function touch(field: keyof EPAPerson) {
+    setTouched(t => ({ ...t, [field]: true }));
+    onBlur();
+  }
+
+  function requiredError(field: keyof EPAPerson, label: string): string | undefined {
+    if (!touched[field]) return undefined;
+    return !attorney[field] ? `${label} is required` : undefined;
+  }
+
+  function emailError(): string | undefined {
+    if (!touched.email) return undefined;
+    if (!attorney.email) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(attorney.email)) return "Please enter a valid email address";
+    return undefined;
+  }
+
+
 
   return (
     <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e7e5e4", overflow: "hidden", marginBottom: 10 }}>
@@ -117,14 +142,18 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
         {/* Name row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
           <div>
-            <FieldLabel htmlFor={`first-${globalIndex}`}>First name(s)</FieldLabel>
+            <FieldLabel htmlFor={`first-${globalIndex}`}>First name(s) <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
             <TextInput id={`first-${globalIndex}`} placeholder="e.g. John"
-              value={attorney.firstNames} onChange={v => set("firstNames", v)} onBlur={onBlur} />
+              value={attorney.firstNames} onChange={v => set("firstNames", v)}
+              onBlur={() => touch("firstNames")}
+              error={requiredError("firstNames", "First name")} />
           </div>
           <div>
-            <FieldLabel htmlFor={`last-${globalIndex}`}>Last name</FieldLabel>
+            <FieldLabel htmlFor={`last-${globalIndex}`}>Last name <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
             <TextInput id={`last-${globalIndex}`} placeholder="e.g. Smith"
-              value={attorney.lastName} onChange={v => set("lastName", v)} onBlur={onBlur} />
+              value={attorney.lastName} onChange={v => set("lastName", v)}
+              onBlur={() => touch("lastName")}
+              error={requiredError("lastName", "Last name")} />
           </div>
         </div>
 
@@ -142,25 +171,22 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
             value={attorney.address} onChange={v => set("address", v)} onBlur={onBlur} />
         </div>
 
-        {/* Phone row — Mobile first, then Home Phone */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-          <div>
-            <FieldLabel htmlFor={`mobile-${globalIndex}`}>Mobile</FieldLabel>
-            <TextInput id={`mobile-${globalIndex}`} type="tel" placeholder="021 123 456"
-              value={attorney.mobilePhone} onChange={v => set("mobilePhone", v)} onBlur={onBlur} />
-          </div>
-          <div>
-            <FieldLabel htmlFor={`home-${globalIndex}`}>Home Phone</FieldLabel>
-            <TextInput id={`home-${globalIndex}`} type="tel" placeholder="06 123 4567"
-              value={attorney.homePhone} onChange={v => set("homePhone", v)} onBlur={onBlur} />
-          </div>
+        {/* Phone */}
+        <div style={{ marginBottom: 12 }}>
+          <FieldLabel htmlFor={`phone-${globalIndex}`}>Phone <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
+          <TextInput id={`phone-${globalIndex}`} type="tel" placeholder="021 123 456"
+            value={attorney.phone} onChange={v => set("phone", v)}
+            onBlur={() => { touch("phone"); onBlur(); }}
+            error={touched.phone && !attorney.phone ? "Phone is required" : undefined} />
         </div>
 
         {/* Email */}
         <div>
-          <FieldLabel htmlFor={`email-${globalIndex}`}>Email</FieldLabel>
+          <FieldLabel htmlFor={`email-${globalIndex}`}>Email <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
           <TextInput id={`email-${globalIndex}`} type="email" placeholder="e.g. john@email.com"
-            value={attorney.email} onChange={v => set("email", v)} onBlur={onBlur} />
+            value={attorney.email} onChange={v => set("email", v)}
+            onBlur={() => touch("email")}
+            error={emailError()} />
         </div>
       </div>
     </div>
@@ -272,9 +298,13 @@ export default function EPAPage() {
           <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: status === "saving" ? "#c0392b" : isDirty ? "#d97706" : "#a8a29e" }}>
             {status === "saving" ? "Saving…" : isDirty ? "Unsaved changes" : "All saved"}
           </span>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+          <Link href={`/plans/${planId}`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
+            Plan
+          </Link>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#a8a29e", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-            Home
+            All Plans
           </Link>
           <Link href={`/plans/${planId}/care-contacts`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             Next

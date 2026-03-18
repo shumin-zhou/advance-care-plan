@@ -145,7 +145,7 @@ function drawPageHeader(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan, page
     drawSmallField(page, fonts, boxX + 6, identityY - 20, "First Name/s:", pi.firstNames ?? "");
     drawSmallField(page, fonts, boxX + 6, identityY - 32, "NHI Number:", pi.nhiNumber ?? "");
     drawSmallField(page, fonts, boxX + 6, identityY - 44, "Date of Birth:", formatDob(pi.dateOfBirth));
-    drawSmallField(page, fonts, boxX + 6, identityY - 56, "Phone:", `${pi.phone ?? ""}   Mobile: ${pi.mobile ?? ""}`);
+    drawSmallField(page, fonts, boxX + 6, identityY - 56, "Phone:", pi.phone ?? "");
     ps.y = A4_H - 125;
   } else {
     ps.y = A4_H - 50;
@@ -198,10 +198,7 @@ function drawCoverContent(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
     { label: "Date of Birth", value: formatDob(pi.dateOfBirth) },
   ]);
   y = drawField(page, fonts, MARGIN, y, "Address", pi.address ?? "", CONTENT_W, true);
-  y = drawTwoColumnFields(page, fonts, y, [
-    { label: "Mobile",     value: pi.mobile ?? "" },
-    { label: "Home Phone", value: pi.phone  ?? "" },
-  ]);
+  y = drawField(page, fonts, MARGIN, y, "Phone", pi.phone ?? "", CONTENT_W);
 
   ps.y = y;
 }
@@ -235,10 +232,7 @@ function drawPage2(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
         { label: "Email",        value: attorney.email        ?? "" },
       ]);
       y = drawField(page, fonts, MARGIN, y, "Address", attorney.address ?? "", CONTENT_W, true);
-      y = drawTwoColumnFields(page, fonts, y, [
-        { label: "Mobile",     value: attorney.mobilePhone ?? "" },
-        { label: "Home Phone", value: attorney.homePhone   ?? "" },
-      ]);
+      y = drawField(page, fonts, MARGIN, y, "Phone", (attorney as any).phone ?? "", CONTENT_W);
       y -= 6;
     }
     y -= 4;

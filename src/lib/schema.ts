@@ -7,6 +7,12 @@ import { z } from "zod";
 const optionalString = z.string().optional();
 const requiredString = (field: string) =>
   z.string().min(1, { message: `${field} is required` });
+const optionalEmail = z
+  .union([
+    z.literal(""),
+    z.string().email({ message: "Please enter a valid email address" }),
+  ])
+  .optional();
 
 // ---------------------------------------------------------------------------
 // 3.2 Personal Information
@@ -16,11 +22,10 @@ export const personalInfoSchema = z.object({
   surname: requiredString("Surname"),
   firstNames: requiredString("First name(s)"),
   nhiNumber: optionalString,
-  dateOfBirth: z.string().optional(), // ISO date string "YYYY-MM-DD"
-  address: optionalString,
-  phone: optionalString,
-  mobile: optionalString,
-  email: optionalString,
+  dateOfBirth: z.string().min(1, { message: "Date of birth is required" }),
+  address: requiredString("Address"),
+  phone: requiredString("Phone"),
+  email: z.string().email({ message: "Please enter a valid email address" }),
 });
 
 export type PersonalInfo = z.infer<typeof personalInfoSchema>;
@@ -38,13 +43,12 @@ export const EPA_TYPE_LABELS: Record<EPAType, string> = {
 };
 
 export const epaPersonSchema = z.object({
-  firstNames: optionalString,
-  lastName: optionalString,
+  firstNames: requiredString("First name(s)"),
+  lastName: requiredString("Last name"),
   relationship: optionalString,
   address: optionalString,
-  homePhone: optionalString,
-  mobilePhone: optionalString,
-  email: optionalString,
+  phone: optionalString,
+  email: z.string().email({ message: "Please enter a valid email address" }),
   type: z.enum(["personalCareAndWelfare", "property"]).default("personalCareAndWelfare"),
 });
 
@@ -61,11 +65,11 @@ export type EPA = z.infer<typeof epaSchema>;
 // ---------------------------------------------------------------------------
 
 export const careContactSchema = z.object({
-  firstName: optionalString,
-  lastName: optionalString,
-  relationship: optionalString,
-  phone: optionalString,
-  email: optionalString,
+  firstName: requiredString("First name"),
+  lastName: requiredString("Last name"),
+  relationship: requiredString("Relationship"),
+  phone: requiredString("Phone"),
+  email: z.string().email({ message: "Please enter a valid email address" }),
 });
 
 export type CareContact = z.infer<typeof careContactSchema>;
@@ -195,7 +199,7 @@ export const signatureSchema = z.object({
   witnessFirstNames: optionalString,
   witnessLastName: optionalString,
   witnessDesignation: optionalString,
-  witnessEmail: optionalString,
+  witnessEmail: optionalEmail,
 });
 
 export type Signature = z.infer<typeof signatureSchema>;

@@ -57,19 +57,36 @@ function getDB(): Promise<IDBPDatabase<AcpDB>> {
     dbPromise = openDB<AcpDB>(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion) {
         if (oldVersion < 2) {
-          // Remove old single-plan store if it exists
+          // Remove old stores from v1 if they exist
           if (db.objectStoreNames.contains("plan" as any)) {
             db.deleteObjectStore("plan" as any);
           }
           if (db.objectStoreNames.contains(STORE_HISTORY)) {
             db.deleteObjectStore(STORE_HISTORY);
           }
-          db.createObjectStore(STORE_PLANS, { keyPath: "id" });
-          const hs = db.createObjectStore(STORE_HISTORY, { keyPath: "id", autoIncrement: true });
+          if (!db.objectStoreNames.contains(STORE_PLANS)) {
+            db.createObjectStore(STORE_PLANS, { keyPath: "id" });
+          }
+          const hs = db.createObjectStore(STORE_HISTORY, {
+            keyPath: "id",
+            autoIncrement: true,
+          });
           hs.createIndex("by-planId", "planId");
           hs.createIndex("by-version", "version");
         }
       },
+      blocked() {
+        // Another tab has the old DB open — ask user to close other tabs
+        console.warn("[storage] DB upgrade blocked by another tab. Please close other tabs and refresh.");
+      },
+      blocking() {
+        // This tab is blocking another tab's upgrade — close our connection
+        dbPromise = null;
+      },
+    }).catch(err => {
+      // Reset so the next call can retry
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;
@@ -81,6 +98,25 @@ function getDB(): Promise<IDBPDatabase<AcpDB>> {
 
 export function isStorageAvailable(): boolean {
   return typeof window !== "undefined" && "indexedDB" in window;
+}
+
+/**
+ * Nuclear option — delete the entire IndexedDB database.
+ * Used by the settings page "Clear all data" and to recover from
+ * a corrupt or blocked upgrade state.
+ */
+export async function clearAllData(): Promise<void> {
+  dbPromise = null;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.deleteDatabase(DB_NAME);
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+    req.onblocked = () => {
+      // Force close any lingering connections then retry
+      dbPromise = null;
+      resolve(); // best-effort
+    };
+  });
 }
 
 function generateId(): string {
@@ -110,8 +146,7 @@ export function migratePlanShape(plan: any): AdvanceCarePlan {
       lastName:     old.lastName     ?? "",
       relationship: old.relationship ?? "",
       address:      old.address      ?? "",
-      homePhone:    old.homePhone    ?? old.daytimePhone ?? "",
-      mobilePhone:  old.mobilePhone  ?? "",
+      phone:  old.phone ?? old.mobilePhone ?? old.homePhone ?? old.daytimePhone ?? "",
       email:        old.email        ?? "",
       type:         "personalCareAndWelfare" as const,
     };
@@ -217,8 +252,14 @@ export async function savePlanById(id: string, plan: AdvanceCarePlan): Promise<A
 export async function deletePlanById(id: string): Promise<void> {
   if (!isStorageAvailable()) return;
   try {
-    const db      = await getDB();
-    const history = await db.getAllFromIndex(STORE_HISTORY, "by-planId", id);
+    const db = await getDB();
+    let history: HistoryRecord[];
+    try {
+      history = await db.getAllFromIndex(STORE_HISTORY, "by-planId", id);
+    } catch {
+      const every = await db.getAll(STORE_HISTORY);
+      history = every.filter(r => r.planId === id);
+    }
     const tx = db.transaction([STORE_PLANS, STORE_HISTORY], "readwrite");
     await tx.objectStore(STORE_PLANS).delete(id);
     for (const h of history) {
@@ -246,8 +287,15 @@ export interface HistoryEntry {
 export async function getPlanHistory(planId: string): Promise<HistoryEntry[]> {
   if (!isStorageAvailable()) return [];
   try {
-    const db  = await getDB();
-    const all = await db.getAllFromIndex(STORE_HISTORY, "by-planId", planId);
+    const db = await getDB();
+    // Use index if available; fall back to full scan filtered in-memory
+    let all: HistoryRecord[];
+    try {
+      all = await db.getAllFromIndex(STORE_HISTORY, "by-planId", planId);
+    } catch {
+      const every = await db.getAll(STORE_HISTORY);
+      all = every.filter(r => r.planId === planId);
+    }
     return (all as Required<HistoryRecord>[])
       .sort((a, b) => b.version - a.version)
       .map(r => ({ id: r.id, planId: r.planId, savedAt: r.savedAt, version: r.version, plan: r.plan }));
@@ -307,8 +355,14 @@ export async function importPlanFromJson(file: File): Promise<AdvanceCarePlan> {
 
 async function trimHistory(planId: string): Promise<void> {
   try {
-    const db  = await getDB();
-    const all = await db.getAllFromIndex(STORE_HISTORY, "by-planId", planId);
+    const db = await getDB();
+    let all: HistoryRecord[];
+    try {
+      all = await db.getAllFromIndex(STORE_HISTORY, "by-planId", planId);
+    } catch {
+      const every = await db.getAll(STORE_HISTORY);
+      all = every.filter(r => r.planId === planId);
+    }
     if (all.length <= MAX_HISTORY) return;
     const toDelete = (all as Required<HistoryRecord>[])
       .sort((a, b) => a.version - b.version)
