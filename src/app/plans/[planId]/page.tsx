@@ -1,6 +1,7 @@
 "use client";
 
 import { usePlan } from "@/context/PlanContext";
+import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
 import { PLAN_SECTIONS, AdvanceCarePlan } from "@/lib/schema";
 import Link from "next/link";
 
@@ -30,14 +31,15 @@ const SECTION_EMOJI: Partial<Record<keyof AdvanceCarePlan, string>> = {
   signature:            "✍️",
 };
 
-function formatDate(iso?: string): string {
-  if (!iso) return "Not yet saved";
+function formatDate(iso: string | undefined, t: (k: any) => any): string {
+  if (!iso) return t("notYetSaved");
   return new Date(iso).toLocaleDateString("en-NZ", {
     day: "numeric", month: "long", year: "numeric",
   });
 }
 
 function ProgressRing({ percentage }: { percentage: number }) {
+  const { t } = useLanguage();
   const r = 44;
   const circ = 2 * Math.PI * r;
   const offset = circ - (percentage / 100) * circ;
@@ -51,18 +53,19 @@ function ProgressRing({ percentage }: { percentage: number }) {
       </svg>
       <div style={{ position: "absolute", textAlign: "center" }}>
         <div style={{ fontFamily: "Georgia, serif", fontSize: "1.4rem", fontWeight: 700, color: "#1c1917", lineHeight: 1 }}>{percentage}%</div>
-        <div style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.6rem", color: "#a8a29e", marginTop: 3, textTransform: "uppercase", letterSpacing: "0.1em" }}>done</div>
+        <div style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.6rem", color: "#a8a29e", marginTop: 3, textTransform: "uppercase", letterSpacing: "0.1em" }}>{t("done")}</div>
       </div>
     </div>
   );
 }
 
 export default function PlanHomePage() {
+  const { t } = useLanguage();
   const { planId, plan, status, completionPercentage, isSectionComplete, save, isDirty, exportJson } = usePlan();
 
   const name = plan.personalInfo?.firstNames
     ? `${plan.personalInfo.firstNames}${plan.personalInfo.surname ? " " + plan.personalInfo.surname : ""}`
-    : "Unnamed Plan";
+    : t("unnamedPlan");
 
   const formSections = PLAN_SECTIONS.filter(s => s.key in SECTION_ROUTES);
   const completedCount = formSections.filter(s => isSectionComplete(s.key as keyof AdvanceCarePlan)).length;
@@ -84,18 +87,16 @@ export default function PlanHomePage() {
                 </svg>
                 All plans
               </Link>
-              <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#a8a29e", margin: "0 0 4px" }}>
-                Our Voice · Tō Tātou Reo
-              </p>
               <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.6rem", fontWeight: 700, color: "#1c1917", margin: 0, lineHeight: 1.2 }}>
                 {name}
               </h1>
             </div>
-            <button onClick={exportJson} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 8, border: "1px solid #e7e5e4", background: "#fff", color: "#78716c", fontSize: "0.75rem", fontFamily: "system-ui, sans-serif", cursor: "pointer" }}>
+            <LanguageSwitcher compact />
+          <button onClick={exportJson} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 8, border: "1px solid #e7e5e4", background: "#fff", color: "#78716c", fontSize: "0.75rem", fontFamily: "system-ui, sans-serif", cursor: "pointer" }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ display: "block", flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
-              Backup
+              {t("backup")}
             </button>
           </div>
 
@@ -105,14 +106,14 @@ export default function PlanHomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             {status === "saving" ? (
-              <span style={{ color: "#c0392b" }}>Saving…</span>
+              <span style={{ color: "#c0392b" }}>{t("saving")}</span>
             ) : isDirty ? (
               <>
-                <span style={{ color: "#d97706" }}>Unsaved changes</span>
-                <button onClick={save} style={{ marginLeft: "auto", color: "#c0392b", background: "none", border: "none", cursor: "pointer", fontSize: "0.7rem", textDecoration: "underline", padding: 0 }}>Save now</button>
+                <span style={{ color: "#d97706" }}>{t("unsavedChanges")}</span>
+                <button onClick={save} style={{ marginLeft: "auto", color: "#c0392b", background: "none", border: "none", cursor: "pointer", fontSize: "0.7rem", textDecoration: "underline", padding: 0 }}>{t("saveNow")}</button>
               </>
             ) : (
-              <span>Last updated {formatDate(plan.updatedAt)}</span>
+              <span>{t("lastUpdated")} {formatDate(plan.updatedAt, t)}</span>
             )}
           </div>
         </header>
@@ -123,16 +124,16 @@ export default function PlanHomePage() {
             <ProgressRing percentage={completionPercentage} />
             <div style={{ flex: 1 }}>
               <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1rem", fontWeight: 600, color: "#1c1917", margin: "0 0 4px" }}>
-                {completionPercentage === 100 ? "Plan complete" : completionPercentage === 0 ? "Let's get started" : "Keep going"}
+                {completionPercentage === 100 ? t("planComplete") : completionPercentage === 0 ? t("letsGetStarted") : t("keepGoing")}
               </h2>
               <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>
                 {completionPercentage === 100
-                  ? "Export your plan to share with your healthcare team."
-                  : `${completedCount} of ${formSections.length} sections completed.`}
+                  ? t("planCompleteDesc")
+                  : t("sectionsCompleted")(completedCount, formSections.length)}
               </p>
               {completionPercentage === 100 && (
                 <Link href={`/plans/${planId}/export`} style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: "8px 16px", borderRadius: 8, background: "#c0392b", color: "#fff", fontSize: "0.8rem", fontFamily: "system-ui, sans-serif", fontWeight: 600, textDecoration: "none" }}>
-                  Export PDF
+                  {t("exportPlanButton")}
                 </Link>
               )}
             </div>
@@ -143,13 +144,12 @@ export default function PlanHomePage() {
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: "12px 14px", marginBottom: 20, fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#92400e", lineHeight: 1.5 }}>
           <span style={{ flexShrink: 0, lineHeight: 1.5 }}>ℹ️</span>
           <p style={{ margin: 0 }}>
-            This plan will only be used if you are unable to communicate your wishes.
-            Discuss medical treatment preferences with your doctor before completing the Treatment Preferences section.
+            {t("planDisclaimer")}
           </p>
         </div>
 
         {/* Sections */}
-        <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#a8a29e", margin: "0 0 10px" }}>Sections</p>
+        <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#a8a29e", margin: "0 0 10px" }}>{t("sections")}</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {formSections.map((section) => {
             const key      = section.key as keyof AdvanceCarePlan;
@@ -161,10 +161,10 @@ export default function PlanHomePage() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: "Georgia, serif", fontSize: "0.875rem", fontWeight: 500, color: complete ? "#1c1917" : "#78716c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {section.label}
+                    {(t("sectionLabels") as any)[key] ?? section.label}
                   </div>
                   <div style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", marginTop: 2, color: complete ? "#c0392b" : "#a8a29e" }}>
-                    {complete ? "Completed" : "Not started"}
+                    {complete ? t("completed") : t("notStarted")}
                   </div>
                 </div>
                 <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: complete ? "#c0392b" : "transparent", border: complete ? "none" : "2px solid #d4d4d4", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -186,7 +186,7 @@ export default function PlanHomePage() {
           {(() => {
             const next = formSections.find(s => !isSectionComplete(s.key as keyof AdvanceCarePlan));
             const href  = next ? sectionUrl(next.key as keyof AdvanceCarePlan) : `/plans/${planId}/export`;
-            const label = next ? `Continue: ${next.label}` : "Export Plan";
+            const label = next ? `${t("continueButton")(next.label)}` : t("exportPlanButton");
             return (
               <Link href={href} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#c0392b", color: "#fff", borderRadius: 12, padding: "13px 20px", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}>
                 {label}

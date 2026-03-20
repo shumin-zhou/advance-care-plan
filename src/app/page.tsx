@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { listPlans, createPlan, deletePlanById, importPlanFromJson, PlanSummary } from "@/lib/storage";
+import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
 
 function formatDate(iso?: string): string {
-  if (!iso) return "Not yet saved";
+  if (!iso) return t("notYetSaved");
   return new Date(iso).toLocaleDateString("en-NZ", {
     day: "numeric", month: "long", year: "numeric",
   });
@@ -73,6 +74,7 @@ function PlanCard({ plan, onDelete }: { plan: PlanSummary; onDelete: (id: string
 
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [mounted, setMounted]     = useState(false);
   const [plans, setPlans]         = useState<PlanSummary[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -127,15 +129,15 @@ export default function HomePage() {
 
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#a8a29e", margin: "0 0 4px" }}>
-            Our Voice · Tō Tātou Reo
-          </p>
           <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.75rem", fontWeight: 700, color: "#1c1917", margin: 0, lineHeight: 1.2 }}>
             Advance Care Plans
           </h1>
           <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: "8px 0 0", lineHeight: 1.5 }}>
-            Each person's plan is stored separately on this device.
+            {t("planSelectorSubtitle")}
           </p>
+          <div style={{ marginTop: 12 }}>
+            <LanguageSwitcher />
+          </div>
         </div>
 
         {/* Error */}
@@ -162,7 +164,7 @@ export default function HomePage() {
             </p>
             <button onClick={handleCreate} disabled={creating}
               style={{ padding: "11px 24px", borderRadius: 10, background: "#c0392b", border: "none", cursor: creating ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: 700, color: "#fff" }}>
-              {creating ? "Creating…" : "+ Create first plan"}
+              {creating ? t("creating") : t("createFirstPlan")}
             </button>
           </div>
         ) : (
@@ -181,14 +183,14 @@ export default function HomePage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block" }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              {creating ? "Creating…" : "Create new plan"}
+              {creating ? t("creating") : t("createNewPlan")}
             </button>
 
             <label style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "13px 20px", borderRadius: 12, background: "#fff", border: "1.5px solid #e7e5e4", cursor: importing ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: 600, color: "#78716c", boxSizing: "border-box" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
-              {importing ? "Importing…" : "Import backup (.json)"}
+              {importing ? t("importing") : "Import backup (.json)"}
               <input type="file" accept=".json" onChange={handleImport} style={{ display: "none" }} />
             </label>
           </div>

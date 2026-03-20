@@ -8,7 +8,7 @@
  * - FormField component (label + input + optional error)
  * - usePlan() for reading/writing
  * - React Hook Form + Zod resolver for validation
- * - "Save & Continue" bottom bar
+ * - t("saveAndContinue") bottom bar
  */
 
 import { useEffect, useState, useRef } from "react";
@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
+import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
 import { personalInfoSchema, PersonalInfo } from "@/lib/schema";
 
 // ---------------------------------------------------------------------------
@@ -182,6 +183,7 @@ function DatePicker({ id, value, onChange, error }: {
   onChange: (iso: string) => void;
   error?: string;
 }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => value ? parseInt(value.slice(0,4)) : THIS_YEAR - 30);
   const [viewMonth, setViewMonth] = useState(() => value ? parseInt(value.slice(5,7)) - 1 : 0);
@@ -257,7 +259,7 @@ function DatePicker({ id, value, onChange, error }: {
           outlineOffset: 2,
         }}
       >
-        <span>{value ? toDisplay(value) : "DD/MM/YYYY"}</span>
+        <span>{value ? toDisplay(value) : t("ddmmyyyy")}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block", flexShrink: 0, color: "#a8a29e" }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
         </svg>
@@ -377,6 +379,7 @@ function FieldGroup({ children }: { children: React.ReactNode }) {
 }
 
 function SectionDivider({ label }: { label: string }) {
+  const { t } = useLanguage();
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 10,
@@ -404,6 +407,7 @@ function SectionDivider({ label }: { label: string }) {
 // ---------------------------------------------------------------------------
 
 export default function PersonalInfoPage() {
+  const { t } = useLanguage();
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
 
   const {
@@ -455,19 +459,19 @@ export default function PersonalInfoPage() {
           <div style={{ width: 80 }} />
 
           <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: status === "saving" ? "#c0392b" : isDirty ? "#d97706" : "#a8a29e" }}>
-            {status === "saving" ? "Saving…" : isDirty ? "Unsaved changes" : "All saved"}
+            {status === "saving" ? t("saving") : isDirty ? t("unsavedChanges") : t("allSaved")}
           </span>
 
           <Link href={`/plans/${planId}`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
-            Plan
+            {t("plan")}
           </Link>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#a8a29e", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-            All Plans
+            {t("allPlans")}
           </Link>
           <Link href={`/plans/${planId}/epa`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
-            Next
+            {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
         </div>
@@ -488,13 +492,13 @@ export default function PersonalInfoPage() {
             fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700,
             color: "#1c1917", margin: "0 0 6px",
           }}>
-            Personal Information
+            {t("personalInfoTitle")}
           </h1>
           <p style={{
             fontFamily: "system-ui, sans-serif", fontSize: "0.85rem",
             color: "#78716c", margin: 0, lineHeight: 1.5,
           }}>
-            Basic details that identify you and your plan.
+            {t("personalInfoSubtitle")}
           </p>
         </div>
 
@@ -506,19 +510,19 @@ export default function PersonalInfoPage() {
           {/* Name row */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
             <div>
-              <FieldLabel htmlFor="firstNames" required>First name(s)</FieldLabel>
+              <FieldLabel htmlFor="firstNames" required>{t("firstNames")}</FieldLabel>
               <TextInput
                 id="firstNames"
-                placeholder="e.g. Jane Mary"
+                placeholder={t("firstNamesPlaceholder")}
                 error={errors.firstNames?.message}
                 {...register("firstNames")}
               />
             </div>
             <div>
-              <FieldLabel htmlFor="surname" required>Surname</FieldLabel>
+              <FieldLabel htmlFor="surname" required>{t("surname")}</FieldLabel>
               <TextInput
                 id="surname"
-                placeholder="e.g. Smith"
+                placeholder={t("surnamePlaceholder")}
                 error={errors.surname?.message}
                 {...register("surname")}
               />
@@ -528,16 +532,16 @@ export default function PersonalInfoPage() {
           {/* NHI + DOB row */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
             <div>
-              <FieldLabel htmlFor="nhiNumber">NHI Number</FieldLabel>
+              <FieldLabel htmlFor="nhiNumber">{t("nhiNumber")}</FieldLabel>
               <TextInput
                 id="nhiNumber"
-                placeholder="e.g. ABC1234"
+                placeholder={t("nhiPlaceholder")}
                 error={errors.nhiNumber?.message}
                 {...register("nhiNumber")}
               />
             </div>
             <div>
-              <FieldLabel htmlFor="dateOfBirth" required>Date of birth</FieldLabel>
+              <FieldLabel htmlFor="dateOfBirth" required>{t("dateOfBirth")}</FieldLabel>
               <DatePicker
                 id="dateOfBirth"
                 value={watch("dateOfBirth")}
@@ -549,7 +553,7 @@ export default function PersonalInfoPage() {
 
           {/* Address */}
           <FieldGroup>
-            <FieldLabel htmlFor="address" required>Address</FieldLabel>
+            <FieldLabel htmlFor="address" required>{t("address")}</FieldLabel>
             <TextareaInput
               id="address"
               placeholder={"123 Example Street\nPalmerston North 4410"}
@@ -559,15 +563,15 @@ export default function PersonalInfoPage() {
             />
           </FieldGroup>
 
-          <SectionDivider label="Contact numbers" />
+          <SectionDivider label={t("contactNumbers")} />
 
           {/* Phone */}
           <div style={{ marginBottom: 20 }}>
-            <FieldLabel htmlFor="phone" required>Phone</FieldLabel>
+            <FieldLabel htmlFor="phone" required>{t("phone")}</FieldLabel>
             <TextInput
               id="phone"
               type="tel"
-              placeholder="e.g. 021 123 456"
+              placeholder={t("phonePlaceholder")}
               error={errors.phone?.message}
               {...register("phone")}
             />
@@ -575,11 +579,11 @@ export default function PersonalInfoPage() {
 
           {/* Email */}
           <div style={{ marginBottom: 20 }}>
-            <FieldLabel htmlFor="email" required>Email</FieldLabel>
+            <FieldLabel htmlFor="email" required>{t("email")}</FieldLabel>
             <TextInput
               id="email"
               type="email"
-              placeholder="e.g. jane@email.com"
+              placeholder={t("emailPlaceholder")}
               error={errors.email?.message}
               {...register("email")}
             />
@@ -596,7 +600,7 @@ export default function PersonalInfoPage() {
               fontFamily: "system-ui, sans-serif", fontSize: "0.75rem",
               color: "#78716c", margin: 0, lineHeight: 1.5,
             }}>
-              Your details are saved locally on your device. Nothing is sent to any server unless you create an account.
+              {t("privacyNoteForm")}
             </p>
           </div>
 

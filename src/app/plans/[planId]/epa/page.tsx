@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
+import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
 import { EPAPerson, EPA_TYPE_LABELS, EPAType } from "@/lib/schema";
 
 // ---------------------------------------------------------------------------
@@ -75,6 +76,7 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
   onRemove: () => void;
   onBlur: () => void;
 }) {
+  const { t } = useLanguage();
   const [touched, setTouched] = React.useState<Partial<Record<keyof EPAPerson, boolean>>>({});
 
   function set(field: keyof EPAPerson, value: string) {
@@ -93,8 +95,8 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
 
   function emailError(): string | undefined {
     if (!touched.email) return undefined;
-    if (!attorney.email) return "Email is required";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(attorney.email)) return "Please enter a valid email address";
+    if (!attorney.email) return t("fieldRequired")(t("email"));
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(attorney.email)) return t("invalidEmail");
     return undefined;
   }
 
@@ -113,7 +115,7 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
         {showRemove && (
           <button type="button" onClick={onRemove}
             style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#a8a29e", padding: 0 }}>
-            Remove
+            {t("remove")}
           </button>
         )}
       </div>
@@ -121,7 +123,7 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
       <div style={{ padding: 14 }}>
         {/* EPA Type dropdown */}
         <div style={{ marginBottom: 12 }}>
-          <FieldLabel htmlFor={`type-${globalIndex}`}>EPA Type</FieldLabel>
+          <FieldLabel htmlFor={`type-${globalIndex}`}>{t("epaTypeLabel")}</FieldLabel>
           <div style={{ position: "relative" as const }}>
             <select
               id={`type-${globalIndex}`}
@@ -129,8 +131,8 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
               onChange={e => { set("type", e.target.value); onBlur(); }}
               style={{ width: "100%", padding: "9px 32px 9px 11px", borderRadius: 8, border: "1.5px solid #e7e5e4", background: "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", color: "#1c1917", outline: "none", appearance: "none" as const, cursor: "pointer" }}
             >
-              <option value="personalCareAndWelfare">Personal Care and Welfare</option>
-              <option value="property">Property</option>
+              <option value="personalCareAndWelfare">{t("personalCareAndWelfare")}</option>
+              <option value="property">{t("epaPropertyLabel")}</option>
             </select>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
               style={{ position: "absolute" as const, right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" as const, color: "#a8a29e" }}>
@@ -142,48 +144,48 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
         {/* Name row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
           <div>
-            <FieldLabel htmlFor={`first-${globalIndex}`}>First name(s) <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
-            <TextInput id={`first-${globalIndex}`} placeholder="e.g. John"
+            <FieldLabel htmlFor={`first-${globalIndex}`}>{t("firstName")} <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
+            <TextInput id={`first-${globalIndex}`} placeholder={t("firstNamesPlaceholder")}
               value={attorney.firstNames} onChange={v => set("firstNames", v)}
               onBlur={() => touch("firstNames")}
-              error={requiredError("firstNames", "First name")} />
+              error={requiredError("firstNames", t("firstName"))} />
           </div>
           <div>
-            <FieldLabel htmlFor={`last-${globalIndex}`}>Last name <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
-            <TextInput id={`last-${globalIndex}`} placeholder="e.g. Smith"
+            <FieldLabel htmlFor={`last-${globalIndex}`}>{t("lastName")} <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
+            <TextInput id={`last-${globalIndex}`} placeholder={t("surnamePlaceholder")}
               value={attorney.lastName} onChange={v => set("lastName", v)}
               onBlur={() => touch("lastName")}
-              error={requiredError("lastName", "Last name")} />
+              error={requiredError("lastName", t("lastName"))} />
           </div>
         </div>
 
         {/* Relationship */}
         <div style={{ marginBottom: 12 }}>
-          <FieldLabel htmlFor={`rel-${globalIndex}`}>Relationship</FieldLabel>
-          <TextInput id={`rel-${globalIndex}`} placeholder="e.g. Spouse, Son, Daughter"
+          <FieldLabel htmlFor={`rel-${globalIndex}`}>{t("relationship")}</FieldLabel>
+          <TextInput id={`rel-${globalIndex}`} placeholder={t("relationshipPlaceholder")}
             value={attorney.relationship} onChange={v => set("relationship", v)} onBlur={onBlur} />
         </div>
 
         {/* Address */}
         <div style={{ marginBottom: 12 }}>
-          <FieldLabel htmlFor={`addr-${globalIndex}`}>Address</FieldLabel>
+          <FieldLabel htmlFor={`addr-${globalIndex}`}>{t("addressLabel")}</FieldLabel>
           <TextareaInput id={`addr-${globalIndex}`} placeholder={"123 Example Street\nPalmerston North 4410"}
             value={attorney.address} onChange={v => set("address", v)} onBlur={onBlur} />
         </div>
 
         {/* Phone */}
         <div style={{ marginBottom: 12 }}>
-          <FieldLabel htmlFor={`phone-${globalIndex}`}>Phone <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
+          <FieldLabel htmlFor={`phone-${globalIndex}`}>{t("phone")} <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
           <TextInput id={`phone-${globalIndex}`} type="tel" placeholder="021 123 456"
             value={attorney.phone} onChange={v => set("phone", v)}
             onBlur={() => { touch("phone"); onBlur(); }}
-            error={touched.phone && !attorney.phone ? "Phone is required" : undefined} />
+            error={touched.phone && !attorney.phone ? t("fieldRequired")(t("phone")) : undefined} />
         </div>
 
         {/* Email */}
         <div>
-          <FieldLabel htmlFor={`email-${globalIndex}`}>Email <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
-          <TextInput id={`email-${globalIndex}`} type="email" placeholder="e.g. john@email.com"
+          <FieldLabel htmlFor={`email-${globalIndex}`}>{t("email")} <span style={{ color: "#c0392b" }}>*</span></FieldLabel>
+          <TextInput id={`email-${globalIndex}`} type="email" placeholder={t("emailPlaceholder")}
             value={attorney.email} onChange={v => set("email", v)}
             onBlur={() => touch("email")}
             error={emailError()} />
@@ -204,6 +206,8 @@ function EPATypeSection({ type, attorneys, allAttorneys, onUpdate, onBlur }: {
   onUpdate: (updated: EPAPerson[]) => void;
   onBlur: () => void;
 }) {
+  const { t } = useLanguage();
+
   function handleChange(globalIndex: number, updated: EPAPerson) {
     onUpdate(allAttorneys.map((a, i) => i === globalIndex ? updated : a));
   }
@@ -223,18 +227,18 @@ function EPATypeSection({ type, attorneys, allAttorneys, onUpdate, onBlur }: {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 4, height: 20, borderRadius: 2, background: "#c0392b" }} />
           <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1rem", fontWeight: 700, color: "#1c1917", margin: 0 }}>
-            {EPA_TYPE_LABELS[type]}
+            {type === "personalCareAndWelfare" ? t("epaPersonalCareLabel") : t("epaPropertyLabel")}
           </h2>
         </div>
         <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: "#a8a29e" }}>
-          {attorneys.length} {attorneys.length === 1 ? "person" : "people"}
+          {t("epaPersonCount")(attorneys.length)}
         </span>
       </div>
 
       {/* Cards */}
       {attorneys.length === 0 && (
         <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#a8a29e", margin: "0 0 10px", fontStyle: "italic" }}>
-          No {EPA_TYPE_LABELS[type].toLowerCase()} attorney added yet.
+          {t("epaNoTypeAttorney")(type === "personalCareAndWelfare" ? t("epaPersonalCareLabel") : t("epaPropertyLabel"))}
         </p>
       )}
       {attorneys.map(({ attorney, globalIndex }) => (
@@ -253,7 +257,7 @@ function EPATypeSection({ type, attorneys, allAttorneys, onUpdate, onBlur }: {
       <button type="button" onClick={handleAdd}
         style={{ width: "100%", padding: "11px", borderRadius: 10, border: "1.5px dashed #d4d4d0", background: "transparent", fontFamily: "system-ui, sans-serif", fontSize: "0.82rem", color: "#78716c", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-        Add {EPA_TYPE_LABELS[type]} attorney
+        {t("epaAddTypeAttorney")(type === "personalCareAndWelfare" ? t("epaPersonalCareLabel") : t("epaPropertyLabel"))}
       </button>
     </div>
   );
@@ -264,6 +268,7 @@ function EPATypeSection({ type, attorneys, allAttorneys, onUpdate, onBlur }: {
 // ---------------------------------------------------------------------------
 
 export default function EPAPage() {
+  const { t } = useLanguage();
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
 
   const [attorneys, setAttorneys] = useState<EPAPerson[]>(() => {
@@ -293,21 +298,21 @@ export default function EPAPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 8px", position: "sticky", top: 0, zIndex: 10, background: "rgba(253,248,243,0.92)", backdropFilter: "blur(8px)" }}>
           <Link href={`/plans/${planId}/personal-info`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-            Previous
+            {t("previous")}
           </Link>
           <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: status === "saving" ? "#c0392b" : isDirty ? "#d97706" : "#a8a29e" }}>
-            {status === "saving" ? "Saving…" : isDirty ? "Unsaved changes" : "All saved"}
+            {status === "saving" ? t("saving") : isDirty ? t("unsavedChanges") : t("allSaved")}
           </span>
           <Link href={`/plans/${planId}`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
-            Plan
+            {t("plan")}
           </Link>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#a8a29e", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-            All Plans
+            {t("allPlans")}
           </Link>
           <Link href={`/plans/${planId}/care-contacts`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
-            Next
+            {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
         </div>
@@ -315,9 +320,9 @@ export default function EPAPage() {
         {/* Header */}
         <div style={{ padding: "20px 0 20px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: "rgba(192,57,43,0.1)", fontSize: "1.3rem", marginBottom: 14 }}>🛡️</div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>Power of Attorney</h1>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{t("epaTitle")}</h1>
           <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>
-            Record the people nominated to act on your behalf.
+            {t("epaSubtitle")}
           </p>
         </div>
 
@@ -325,9 +330,7 @@ export default function EPAPage() {
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 14px", marginBottom: 24, fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#92400e", lineHeight: 1.6 }}>
           <span style={{ flexShrink: 0 }}>ℹ️</span>
           <p style={{ margin: 0 }}>
-            An EPA must be formally appointed under the <strong>Protection of Personal and Property Rights Act 1988</strong>.
-            A <strong>Personal Care and Welfare</strong> attorney makes decisions about your health and daily life.
-            A <strong>Property</strong> attorney manages your finances and assets.
+            {t("epaInfoBanner")}
           </p>
         </div>
 
@@ -335,17 +338,15 @@ export default function EPAPage() {
         {attorneys.length === 0 && (
           <div style={{ background: "#fff", borderRadius: 14, border: "1.5px dashed #e7e5e4", padding: "28px 20px", textAlign: "center" as const, marginBottom: 24 }}>
             <div style={{ fontSize: "2rem", marginBottom: 10 }}>🛡️</div>
-            <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: "0 0 16px", lineHeight: 1.5 }}>
-              No attorneys added yet.
-            </p>
+            <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: "0 0 16px", lineHeight: 1.5 }}>{t("epaNoAttorneys")}</p>
             <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" as const }}>
               <button type="button" onClick={() => handleUpdate([emptyAttorney("personalCareAndWelfare")])}
                 style={{ padding: "9px 16px", borderRadius: 10, border: "1.5px solid #c0392b", background: "rgba(192,57,43,0.06)", fontFamily: "system-ui, sans-serif", fontSize: "0.82rem", fontWeight: 600, color: "#c0392b", cursor: "pointer" }}>
-                + Personal Care &amp; Welfare
+                {t("addPersonalCareEpa")}
               </button>
               <button type="button" onClick={() => handleUpdate([emptyAttorney("property")])}
                 style={{ padding: "9px 16px", borderRadius: 10, border: "1.5px solid #e7e5e4", background: "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.82rem", fontWeight: 600, color: "#78716c", cursor: "pointer" }}>
-                + Property
+                {t("addPropertyEpa")}
               </button>
             </div>
           </div>
@@ -371,9 +372,7 @@ export default function EPAPage() {
 
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#f5f5f4", borderRadius: 10, padding: "12px 14px", marginTop: 4 }}>
               <span style={{ fontSize: "0.85rem", flexShrink: 0 }}>📱</span>
-              <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>
-                On supported mobile browsers (iOS Safari, Android Chrome) you'll be able to import directly from your contacts. Coming soon.
-              </p>
+              <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>{t("contactsImportNote")}</p>
             </div>
           </>
         )}
@@ -389,7 +388,7 @@ export default function EPAPage() {
           )}
           <Link href={`/plans/${planId}/care-contacts`} onClick={() => persist(attorneys)}
             style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#c0392b", color: "#fff", borderRadius: 12, padding: "13px 20px", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}>
-            Save & Continue
+            {t("saveAndContinue")}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block", flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
         </div>

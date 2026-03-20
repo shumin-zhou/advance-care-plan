@@ -166,12 +166,8 @@ function drawCoverContent(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
   let y = ps.y;
 
   // Title block
-  page.drawText("our voice", { x: MARGIN, y, size: 22, font: fonts.bold, color: RED });
-  y -= 22;
-  page.drawText("to tātou reo", { x: MARGIN, y, size: 14, font: fonts.italic, color: RED });
-  y -= 12;
   page.drawText("Advance Care Planning", { x: MARGIN, y, size: 9, font: fonts.regular, color: MID });
-  y -= 30;
+  y -= 20;
 
   page.drawText("MY ADVANCE CARE PLAN", { x: MARGIN, y, size: 20, font: fonts.bold, color: RED });
   y -= 24;

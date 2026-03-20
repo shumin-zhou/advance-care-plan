@@ -15,18 +15,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
+import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
 import { signatureSubmitSchema, Signature } from "@/lib/schema";
 
 // ---------------------------------------------------------------------------
 // Acknowledgement statements (from the original form)
 // ---------------------------------------------------------------------------
 
-const ACKNOWLEDGEMENTS = [
-  "I understand this is a record of my preferences to guide my healthcare team in providing appropriate care for me.",
-  "I understand that it will only be used when I am unable to make decisions for myself.",
-  "I understand that medically futile and/or inappropriate treatments will not be administered even if this is my expressed preference.",
-  "I acknowledge that this record may be held in an electronic form and will be made available to other health care providers for purposes of treating me.",
-];
+
 
 // ---------------------------------------------------------------------------
 // Reusable field components
@@ -68,6 +64,7 @@ function DatePicker({ id, value, onChange, error }: {
   onChange: (iso: string) => void;
   error?: string;
 }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => value ? parseInt(value.slice(0,4)) : new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(() => value ? parseInt(value.slice(5,7)) - 1 : new Date().getMonth());
@@ -131,7 +128,7 @@ function DatePicker({ id, value, onChange, error }: {
           color: value ? "#1c1917" : "#a8a29e", cursor: "pointer", outline: "none",
         }}
       >
-        <span>{value ? toDisplay(value) : "DD/MM/YYYY"}</span>
+        <span>{value ? toDisplay(value) : t("ddmmyyyy")}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block", flexShrink: 0, color: "#a8a29e" }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
         </svg>
@@ -217,6 +214,7 @@ interface SignatureCanvasProps {
 }
 
 function SignatureCanvas({ onSave, onClear, existingDataUrl, label }: SignatureCanvasProps) {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const [mode, setMode] = useState<"draw" | "type">("draw");
@@ -378,7 +376,7 @@ function SignatureCanvas({ onSave, onClear, existingDataUrl, label }: SignatureC
         <div style={{ marginBottom: 8 }}>
           <input
             type="text"
-            placeholder="Type your full name"
+            placeholder={t("typeYourFullName")}
             value={typedName}
             onChange={e => { setTypedName(e.target.value); renderTypedSignature(e.target.value); }}
             style={{
@@ -413,7 +411,7 @@ function SignatureCanvas({ onSave, onClear, existingDataUrl, label }: SignatureC
         {isEmpty && (
           <div style={{ position: "absolute" as const, inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" as const }}>
             <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#c4c0bb", userSelect: "none" as const }}>
-              {mode === "draw" ? "Sign here" : "Type your name above"}
+              {mode === "draw" ? t("signHere") : t("typeYourNameAbove")}
             </span>
           </div>
         )}
@@ -427,6 +425,8 @@ function SignatureCanvas({ onSave, onClear, existingDataUrl, label }: SignatureC
 // ---------------------------------------------------------------------------
 
 export default function SignaturePage() {
+  const { t } = useLanguage();
+  const ACKNOWLEDGEMENTS = [t("ack1Full"), t("ack2Full"), t("ack3Full"), t("ack4Full")];
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
 
   const {
@@ -478,21 +478,21 @@ export default function SignaturePage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 8px", position: "sticky", top: 0, zIndex: 10, background: "rgba(253,248,243,0.92)", backdropFilter: "blur(8px)" }}>
           <Link href={`/plans/${planId}/treatment-preferences`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-            Previous
+            {t("previous")}
           </Link>
           <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: status === "saving" ? "#c0392b" : isDirty ? "#d97706" : "#a8a29e" }}>
-            {status === "saving" ? "Saving…" : isDirty ? "Unsaved changes" : "All saved"}
+            {status === "saving" ? t("saving") : isDirty ? t("unsavedChanges") : t("allSaved")}
           </span>
           <Link href={`/plans/${planId}`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
-            Plan
+            {t("plan")}
           </Link>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#a8a29e", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-            All Plans
+            {t("allPlans")}
           </Link>
           <Link href={`/plans/${planId}/export`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
-            Next
+            {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
         </div>
@@ -500,9 +500,9 @@ export default function SignaturePage() {
         {/* Header */}
         <div style={{ padding: "20px 0 24px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: "rgba(192,57,43,0.1)", fontSize: "1.3rem", marginBottom: 14 }}>✍️</div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>Signature</h1>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{t("signatureTitle")}</h1>
           <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>
-            Read and acknowledge each statement, then sign to complete your plan.
+            {t("signatureIntro")}
           </p>
         </div>
 
@@ -512,9 +512,9 @@ export default function SignaturePage() {
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: "14px 16px", marginBottom: 24 }}>
           <span style={{ fontSize: "1rem", flexShrink: 0 }}>⚠️</span>
           <div style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.78rem", color: "#92400e", lineHeight: 1.6 }}>
-            <p style={{ margin: "0 0 6px", fontWeight: 700 }}>Important — legal status of this digital plan</p>
+            <p style={{ margin: "0 0 6px", fontWeight: 700 }}>{t("legalBannerTitleAlt")}</p>
             <p style={{ margin: 0 }}>
-              This digital plan is a record of your preferences. It is <strong>not a legally binding document under NZ law</strong>. To create a plan that healthcare providers are required to follow, you must <strong>print this form, sign it by hand, and have it witnessed by a health professional</strong>. Your digital copy remains a useful guide even without a wet-ink signature.
+              {t("legalBannerTextFull")} <strong style={{display:"none"}}>not a legally binding document under NZ law</strong>. To create a plan that healthcare providers are required to follow, you must <strong>print this form, sign it by hand, and have it witnessed by a health professional</strong>. Your digital copy remains a useful guide even without a wet-ink signature.
             </p>
           </div>
         </div>
@@ -526,7 +526,7 @@ export default function SignaturePage() {
           {/* ---------------------------------------------------------------- */}
           <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 18, marginBottom: 16 }}>
             <p style={{ fontFamily: "Georgia, serif", fontSize: "0.95rem", fontWeight: 600, color: "#1c1917", margin: "0 0 16px" }}>
-              Please read and acknowledge each statement:
+              {t("pleaseReadAndAck")}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {ACKNOWLEDGEMENTS.map((text, i) => {
@@ -570,7 +570,7 @@ export default function SignaturePage() {
               </p>
             )}
             <SignatureCanvas
-              label="Your signature"
+              label={t("yourSignature")}
               existingDataUrl={plan.signature?.userSignatureDataUrl}
               onSave={(dataUrl) => { setValue("userSignatureDataUrl", dataUrl); persist(); }}
               onClear={() => { setValue("userSignatureDataUrl", ""); persist(); }}
@@ -578,7 +578,7 @@ export default function SignaturePage() {
 
             {/* Signature date */}
             <div style={{ marginTop: 14 }}>
-              <FieldLabel htmlFor="sigDate">Date</FieldLabel>
+              <FieldLabel htmlFor="sigDate">{t("dateLabel")}</FieldLabel>
               <DatePicker
                 id="sigDate"
                 value={watch("userSignatureDate")}
@@ -610,9 +610,7 @@ export default function SignaturePage() {
           {/* Witness section                                                   */}
           {/* ---------------------------------------------------------------- */}
           <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 18 }}>
-            <p style={{ fontFamily: "Georgia, serif", fontSize: "0.95rem", fontWeight: 600, color: "#1c1917", margin: "0 0 4px" }}>
-              Witness (Health Professional)
-            </p>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: "0.95rem", fontWeight: 600, color: "#1c1917", margin: "0 0 4px" }}>{t("witnessSection")}</p>
             <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.78rem", color: "#a8a29e", lineHeight: 1.5, margin: "0 0 16px" }}>
               The witness section is completed on the <strong>printed PDF</strong> with a health professional present. Record below once your printed plan has been witnessed.
             </p>
@@ -641,11 +639,11 @@ export default function SignaturePage() {
             {/* Witness name row */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
               <div>
-                <FieldLabel htmlFor="witnessFirst">First name(s)</FieldLabel>
+                <FieldLabel htmlFor="witnessFirst">{t("witnessFirstNames")}</FieldLabel>
                 <TextInput id="witnessFirst" placeholder="e.g. Dr Sarah" {...register("witnessFirstNames")} />
               </div>
               <div>
-                <FieldLabel htmlFor="witnessLast">Last name</FieldLabel>
+                <FieldLabel htmlFor="witnessLast">{t("witnessLastName")}</FieldLabel>
                 <TextInput id="witnessLast" placeholder="e.g. Jones" {...register("witnessLastName")} />
               </div>
             </div>
@@ -653,11 +651,11 @@ export default function SignaturePage() {
             {/* Designation + date row */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
               <div>
-                <FieldLabel htmlFor="witnessDesig">Designation</FieldLabel>
+                <FieldLabel htmlFor="witnessDesig">{t("designation")}</FieldLabel>
                 <TextInput id="witnessDesig" placeholder="e.g. GP, RN" {...register("witnessDesignation")} />
               </div>
               <div>
-                <FieldLabel htmlFor="witnessDate">Date witnessed</FieldLabel>
+                <FieldLabel htmlFor="witnessDate">{t("witnessDate")}</FieldLabel>
                 <DatePicker
                   id="witnessDate"
                   value={watch("witnessSignatureDate")}
@@ -668,7 +666,7 @@ export default function SignaturePage() {
 
             {/* Witness email */}
             <div>
-              <FieldLabel htmlFor="witnessEmail">Email</FieldLabel>
+              <FieldLabel htmlFor="witnessEmail">{t("email")}</FieldLabel>
               <TextInput id="witnessEmail" placeholder="e.g. dr.smith@practice.co.nz" error={(errors as any).witnessEmail?.message} {...register("witnessEmail" as any)} />
             </div>
           </div>
@@ -689,7 +687,7 @@ export default function SignaturePage() {
             onClick={() => handleSubmit((data) => updateSection({ signature: data }), () => updateSection({ signature: watch() as Signature }))()}
             style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: isComplete ? "#c0392b" : "#d4d4d0", color: "#fff", borderRadius: 12, padding: "13px 20px", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", pointerEvents: isComplete ? "auto" : "none" }}
           >
-            {isComplete ? "Export Plan →" : "Complete all steps to export"}
+            {isComplete ? t("exportPlanArrow") : t("completeAllSteps")}
           </Link>
         </div>
       </div>

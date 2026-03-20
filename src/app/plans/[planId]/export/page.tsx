@@ -12,6 +12,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
+import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
 import { PLAN_SECTIONS, AdvanceCarePlan } from "@/lib/schema";
 import { generatePdf } from "@/lib/generatePdf";
 
@@ -31,6 +32,7 @@ const SECTION_SLUGS: Partial<Record<keyof AdvanceCarePlan, string>> = {
 type ExportStatus = "idle" | "generating" | "done" | "error";
 
 export default function ExportPage() {
+  const { t } = useLanguage();
   const { plan, completionPercentage, isSectionComplete, exportJson, planId } = usePlan();
   const [pdfStatus, setPdfStatus] = useState<ExportStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -46,7 +48,7 @@ export default function ExportPage() {
   const sectionUrl = (key: keyof AdvanceCarePlan) => `/plans/${planId}/${SECTION_SLUGS[key]}`;
 
   const name = [plan.personalInfo?.firstNames, plan.personalInfo?.surname]
-    .filter(Boolean).join(" ") || "Your Plan";
+    .filter(Boolean).join(" ") || t("yourPlan");
 
   async function handleDownloadPdf() {
     setPdfStatus("generating");
@@ -64,7 +66,7 @@ export default function ExportPage() {
       setTimeout(() => setPdfStatus("idle"), 3000);
     } catch (err: any) {
       console.error(err);
-      setErrorMsg("Failed to generate PDF. Please try again.");
+      setErrorMsg(t("pdfGenerateError"));
       setPdfStatus("error");
     }
   }
@@ -88,7 +90,7 @@ export default function ExportPage() {
       };
       setPdfStatus("idle");
     } catch (err) {
-      setErrorMsg("Failed to prepare print. Please try downloading instead.");
+      setErrorMsg(t("printError"));
       setPdfStatus("error");
     }
   }
@@ -157,28 +159,24 @@ export default function ExportPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 8px", position: "sticky", top: 0, zIndex: 10, background: "rgba(253,248,243,0.92)", backdropFilter: "blur(8px)" }}>
           <Link href={`/plans/${planId}/signature`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-            Previous
+            {t("previous")}
           </Link>
-          <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, color: "#1c1917" }}>Export & Share</span>
+          <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, color: "#1c1917" }}>{t("exportTitle")}</span>
           <Link href={`/plans/${planId}`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
-            Plan
+            {t("plan")}
           </Link>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#a8a29e", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-            All Plans
+            {t("allPlans")}
           </Link>
         </div>
 
         {/* Header */}
         <div style={{ padding: "20px 0 24px" }}>
           <div style={{ fontSize: "1.8rem", marginBottom: 12 }}>📋</div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>
-            Export & Share
-          </h1>
-          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>
-            Download your plan as a PDF to share with your healthcare team or family.
-          </p>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{t("exportTitle")}</h1>
+          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>{t("exportSubtitle")}</p>
         </div>
 
         {/* Completion summary */}
@@ -220,7 +218,7 @@ export default function ExportPage() {
               <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ display: "block" }}><path d="M2 6l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </div>
-              <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#16a34a", fontWeight: 600 }}>All sections complete</span>
+              <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#16a34a", fontWeight: 600 }}>{t("allSectionsComplete")}</span>
             </div>
           )}
         </div>
@@ -229,7 +227,7 @@ export default function ExportPage() {
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
           <span style={{ fontSize: "1rem", flexShrink: 0 }}>⚠️</span>
           <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.78rem", color: "#92400e", lineHeight: 1.6, margin: 0 }}>
-            <strong>To make this plan clinically effective:</strong> print the PDF, sign by hand in front of a health professional witness, and give copies to your doctor and family/whānau.
+            {t("legalNoticeFull")}
           </p>
         </div>
 
@@ -262,7 +260,7 @@ export default function ExportPage() {
                 Generating PDF…
               </>
             ) : pdfStatus === "done" ? (
-              <>✅  Downloaded!</>
+              <>{t("exportComplete")}</>
             ) : (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
@@ -333,7 +331,7 @@ export default function ExportPage() {
                     flexShrink: 0,
                   }}
                 >
-                  {emailStatus === "generating" ? "…" : emailStatus === "done" ? "✓ Sent" : "Send"}
+                  {emailStatus === "generating" ? "…" : emailStatus === "done" ? "✓ Sent" : t("send")}
                 </button>
               </div>
               {emailStatus === "error" && (
@@ -367,16 +365,14 @@ export default function ExportPage() {
 
         {/* What to do next */}
         <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 18, marginTop: 20 }}>
-          <p style={{ fontFamily: "Georgia, serif", fontSize: "0.95rem", fontWeight: 600, color: "#1c1917", margin: "0 0 14px" }}>
-            What to do next
-          </p>
+          <p style={{ fontFamily: "Georgia, serif", fontSize: "0.95rem", fontWeight: 600, color: "#1c1917", margin: "0 0 14px" }}>{t("whatToDoNext")}</p>
           {[
-            { n: "1", text: "Download and print the PDF above." },
-            { n: "2", text: "Sign the printed form by hand in front of a health professional." },
-            { n: "3", text: "Ask the health professional to sign as your witness." },
-            { n: "4", text: "Give a copy to your GP, and keep one with your important documents." },
+            { n: "1", text: t("step1") },
+            { n: "2", text: t("step2") },
+            { n: "3", text: t("step3") },
+            { n: "4", text: t("step4") },
             { n: "5", text: "Tell your family/whānau and EPA where to find it." },
-            { n: "6", text: "Review your plan every year or whenever your situation changes." },
+            { n: "6", text: t("step6") },
           ].map(step => (
             <div key={step.n} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(192,57,43,0.1)", color: "#c0392b", fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -391,7 +387,7 @@ export default function ExportPage() {
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#fdf4ff", border: "1px solid #e9d5ff", borderRadius: 12, padding: "14px 16px", marginTop: 16 }}>
           <span style={{ fontSize: "1rem", flexShrink: 0 }}>🤍</span>
           <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.78rem", color: "#6b21a8", lineHeight: 1.6, margin: 0 }}>
-            If completing this plan has brought up difficult feelings, support is available. Call or text <strong>1737</strong> (Need to Talk?) any time, free. Hospice NZ: <strong>0800 467 742</strong>.
+            {t("supportNoteFull")}
           </p>
         </div>
 
