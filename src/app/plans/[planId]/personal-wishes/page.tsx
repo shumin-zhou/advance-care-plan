@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -33,6 +33,60 @@ function TextareaInput({ id, placeholder, error, rows = 5, ...rest }: React.Text
   );
 }
 
+// ---------------------------------------------------------------------------
+// Collapsible examples panel
+// ---------------------------------------------------------------------------
+
+function ExamplesPanel({ examples }: { examples: string[] }) {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+          display: "inline-flex", alignItems: "center", gap: 5,
+          fontFamily: "system-ui, sans-serif", fontSize: "0.75rem",
+          color: "#c0392b", textDecoration: "none",
+        }}
+      >
+        <svg
+          width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5"
+          style={{ display: "block", transition: "transform 0.2s", transform: open ? "rotate(90deg)" : "none" }}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+        {open ? t("hideExamples") : t("showExamples")}
+      </button>
+
+      {open && (
+        <ul style={{
+          margin: "10px 0 0", padding: 0, listStyle: "none",
+          background: "rgba(192,57,43,0.04)", borderRadius: 10,
+          border: "1px solid rgba(192,57,43,0.12)",
+        }}>
+          {examples.map((ex, i) => (
+            <li key={i} style={{
+              display: "flex", alignItems: "flex-start", gap: 10,
+              padding: "9px 14px",
+              borderBottom: i < examples.length - 1 ? "1px solid rgba(192,57,43,0.08)" : "none",
+              fontFamily: "system-ui, sans-serif", fontSize: "0.8rem",
+              color: "#57534e", lineHeight: 1.5,
+            }}>
+              <span style={{ color: "#c0392b", flexShrink: 0, marginTop: 1 }}>›</span>
+              <span style={{ fontStyle: "italic" }}>{ex}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function PersonalWishesPage() {
   const { t } = useLanguage();
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
@@ -56,9 +110,9 @@ export default function PersonalWishesPage() {
   }
 
   const wishFields = [
-    { id: "importantToMe", name: "importantToMe" as const, label: t("importantToMe"), placeholder: t("importantToMePlaceholder"), hint: t("importantToMeHint2") },
-    { id: "meaningfulToMe", name: "meaningfulToMe" as const, label: t("meaningfulToMe"), placeholder: t("meaningfulToMePlaceholder2"), hint: t("meaningfulToMeHint2") },
-    { id: "familyAndFriendsMessage", name: "familyAndFriendsMessage" as const, label: t("rememberThings"), placeholder: t("rememberThingsPlaceholder2"), hint: t("rememberThingsHint2") },
+    { id: "importantToMe", name: "importantToMe" as const, label: t("importantToMe"), placeholder: t("importantToMePlaceholder"), hint: t("importantToMeHint2"), examples: t("importantToMeExamples") as unknown as string[] },
+    { id: "meaningfulToMe", name: "meaningfulToMe" as const, label: t("meaningfulToMe"), placeholder: t("meaningfulToMePlaceholder2"), hint: t("meaningfulToMeHint2"), examples: t("meaningfulToMeExamples") as unknown as string[] },
+    { id: "familyAndFriendsMessage", name: "familyAndFriendsMessage" as const, label: t("rememberThings"), placeholder: t("rememberThingsPlaceholder2"), hint: t("rememberThingsHint2"), examples: t("rememberThingsExamples") as unknown as string[] },
   ];
 
   return (
@@ -109,6 +163,7 @@ export default function PersonalWishesPage() {
               <div key={field.id} style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 18 }}>
                 <FieldLabel htmlFor={field.id}>{field.label}</FieldLabel>
                 <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#a8a29e", margin: "0 0 10px", lineHeight: 1.4 }}>{field.hint}</p>
+                <ExamplesPanel examples={(field as any).examples ?? []} />
                 <TextareaInput
                   id={field.id}
                   placeholder={field.placeholder}
