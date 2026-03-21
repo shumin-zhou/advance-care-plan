@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import { SupportTrigger, SupportPanel } from "@/components/SupportPanel";
 import { willSchema, Will } from "@/lib/schema";
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
@@ -77,6 +78,7 @@ function ToggleGroup({ value, onChange, options }: { value?: string; onChange: (
 
 export default function WillPage() {
   const { t } = useLanguage();
+  const [supportOpen, setSupportOpen] = useState(false);
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<Will>({
     resolver: zodResolver(willSchema),
@@ -127,6 +129,11 @@ export default function WillPage() {
           </Link>
         </div>
 
+        {/* Support trigger */}
+        <div style={{ padding: "4px 0 16px" }}>
+          <SupportTrigger open={supportOpen} onToggle={() => setSupportOpen(o => !o)} />
+        </div>
+
         <div style={{ padding: "20px 0 28px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: "rgba(192,57,43,0.1)", fontSize: "1.3rem", marginBottom: 14 }}>📄</div>
           <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{t("willTitle")}</h1>
@@ -163,6 +170,7 @@ export default function WillPage() {
           </Link>
         </div>
       </div>
+      <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }

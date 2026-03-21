@@ -16,6 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import { SupportTrigger, SupportPanel } from "@/components/SupportPanel";
 import { signatureSubmitSchema, Signature } from "@/lib/schema";
 
 // ---------------------------------------------------------------------------
@@ -426,6 +427,7 @@ function SignatureCanvas({ onSave, onClear, existingDataUrl, label }: SignatureC
 
 export default function SignaturePage() {
   const { t } = useLanguage();
+  const [supportOpen, setSupportOpen] = useState(false);
   const ACKNOWLEDGEMENTS = [t("ack1Full"), t("ack2Full"), t("ack3Full"), t("ack4Full")];
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
 
@@ -495,6 +497,11 @@ export default function SignaturePage() {
             {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
+        </div>
+
+        {/* Support trigger */}
+        <div style={{ padding: "4px 0 16px" }}>
+          <SupportTrigger open={supportOpen} onToggle={() => setSupportOpen(o => !o)} />
         </div>
 
         {/* Header */}
@@ -691,6 +698,7 @@ export default function SignaturePage() {
           </Link>
         </div>
       </div>
+      <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }

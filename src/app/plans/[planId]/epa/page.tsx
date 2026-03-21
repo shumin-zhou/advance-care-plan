@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import { SupportTrigger, SupportPanel } from "@/components/SupportPanel";
 import { EPAPerson, EPA_TYPE_LABELS, EPAType } from "@/lib/schema";
 
 // ---------------------------------------------------------------------------
@@ -77,7 +78,7 @@ function AttorneyCard({ attorney, globalIndex, showRemove, onChange, onRemove, o
   onBlur: () => void;
 }) {
   const { t } = useLanguage();
-  const [touched, setTouched] = React.useState<Partial<Record<keyof EPAPerson, boolean>>>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof EPAPerson, boolean>>>({});
 
   function set(field: keyof EPAPerson, value: string) {
     onChange({ ...attorney, [field]: value });
@@ -269,6 +270,7 @@ function EPATypeSection({ type, attorneys, allAttorneys, onUpdate, onBlur }: {
 
 export default function EPAPage() {
   const { t } = useLanguage();
+  const [supportOpen, setSupportOpen] = useState(false);
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
 
   const [attorneys, setAttorneys] = useState<EPAPerson[]>(() => {
@@ -315,6 +317,11 @@ export default function EPAPage() {
             {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
+        </div>
+
+        {/* Support trigger */}
+        <div style={{ padding: "4px 0 16px" }}>
+          <SupportTrigger open={supportOpen} onToggle={() => setSupportOpen(o => !o)} />
         </div>
 
         {/* Header */}
@@ -393,6 +400,7 @@ export default function EPAPage() {
           </Link>
         </div>
       </div>
+      <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }

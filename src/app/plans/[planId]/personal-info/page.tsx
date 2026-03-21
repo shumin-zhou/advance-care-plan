@@ -17,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import { SupportTrigger, SupportPanel } from "@/components/SupportPanel";
 import { personalInfoSchema, PersonalInfo } from "@/lib/schema";
 
 // ---------------------------------------------------------------------------
@@ -408,6 +409,7 @@ function SectionDivider({ label }: { label: string }) {
 
 export default function PersonalInfoPage() {
   const { t } = useLanguage();
+  const [supportOpen, setSupportOpen] = useState(false);
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
 
   const {
@@ -474,6 +476,11 @@ export default function PersonalInfoPage() {
             {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
+        </div>
+
+        {/* Support trigger */}
+        <div style={{ padding: "4px 0 16px" }}>
+          <SupportTrigger open={supportOpen} onToggle={() => setSupportOpen(o => !o)} />
         </div>
 
         {/* ---------------------------------------------------------------- */}
@@ -652,6 +659,7 @@ export default function PersonalInfoPage() {
           </Link>
         </div>
       </div>
+      <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import { SupportTrigger, SupportPanel } from "@/components/SupportPanel";
 import { treatmentPreferencesSchema, TreatmentPreferences } from "@/lib/schema";
 
 function TextareaInput({ id, placeholder, rows = 3, ...rest }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -22,8 +23,67 @@ function TextareaInput({ id, placeholder, rows = 3, ...rest }: React.TextareaHTM
   );
 }
 
+// ---------------------------------------------------------------------------
+// Collapsible treatment preference examples panel
+// ---------------------------------------------------------------------------
+
+function TreatmentExamplesPanel() {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const examples = t("treatmentExamples") as unknown as { want: string; circumstances: string }[];
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+          display: "inline-flex", alignItems: "center", gap: 5,
+          fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#c0392b",
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          style={{ display: "block", transition: "transform 0.2s", transform: open ? "rotate(90deg)" : "none" }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+        {open ? t("hideExamples") : t("showExamples")}
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 10, borderRadius: 12, border: "1px solid rgba(192,57,43,0.15)", overflow: "hidden" }}>
+          {/* Header row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "rgba(192,57,43,0.08)", padding: "8px 14px" }}>
+            <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: "#c0392b", margin: 0 }}>{t("wouldOrWouldNotWant")}</p>
+            <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: "#c0392b", margin: 0 }}>{t("inTheseCircumstances")}</p>
+          </div>
+          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: "#a8a29e", margin: 0, padding: "6px 14px 8px", background: "rgba(192,57,43,0.04)", borderBottom: "1px solid rgba(192,57,43,0.1)", fontStyle: "italic" }}>
+            {t("treatmentExamplesIntro")}
+          </p>
+          {examples.map((ex, i) => (
+            <div key={i} style={{
+              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
+              padding: "10px 14px",
+              background: i % 2 === 0 ? "#fff" : "rgba(192,57,43,0.02)",
+              borderBottom: i < examples.length - 1 ? "1px solid rgba(192,57,43,0.08)" : "none",
+            }}>
+              <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#1c1917", margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>
+                {ex.want}
+              </p>
+              <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#57534e", margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>
+                {ex.circumstances}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TreatmentPreferencesPage() {
   const { t } = useLanguage();
+  const [supportOpen, setSupportOpen] = useState(false);
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
   const { register, handleSubmit, reset, control } = useForm<TreatmentPreferences>({
     resolver: zodResolver(treatmentPreferencesSchema),
@@ -86,6 +146,11 @@ export default function TreatmentPreferencesPage() {
           </Link>
         </div>
 
+        {/* Support trigger */}
+        <div style={{ padding: "4px 0 16px" }}>
+          <SupportTrigger open={supportOpen} onToggle={() => setSupportOpen(o => !o)} />
+        </div>
+
         <div style={{ padding: "20px 0 20px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: "rgba(192,57,43,0.1)", fontSize: "1.3rem", marginBottom: 14 }}>🩺</div>
           <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{t("treatmentPreferencesTitle")}</h1>
@@ -107,6 +172,9 @@ export default function TreatmentPreferencesPage() {
         </div>
 
         <form onSubmit={handleSubmit((data) => updateSection({ treatmentPreferences: data }))} noValidate>
+
+          {/* Examples panel */}
+          <TreatmentExamplesPanel />
 
           {/* Column headers */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8, padding: "0 2px" }}>
@@ -164,6 +232,7 @@ export default function TreatmentPreferencesPage() {
           </Link>
         </div>
       </div>
+      <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }

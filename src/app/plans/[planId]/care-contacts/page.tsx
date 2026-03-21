@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import { SupportTrigger, SupportPanel } from "@/components/SupportPanel";
 import { careContactsSchema, CareContacts } from "@/lib/schema";
 
 function FieldLabel({ htmlFor, required, children }: { htmlFor: string; required?: boolean; children: React.ReactNode }) {
@@ -32,6 +33,7 @@ function TextInput({ id, placeholder, error, ...rest }: React.InputHTMLAttribute
 
 export default function CareContactsPage() {
   const { t } = useLanguage();
+  const [supportOpen, setSupportOpen] = useState(false);
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<CareContacts>({
@@ -99,6 +101,11 @@ export default function CareContactsPage() {
             {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
+        </div>
+
+        {/* Support trigger */}
+        <div style={{ padding: "4px 0 16px" }}>
+          <SupportTrigger open={supportOpen} onToggle={() => setSupportOpen(o => !o)} />
         </div>
 
         {/* Header */}
@@ -185,6 +192,7 @@ export default function CareContactsPage() {
           </Link>
         </div>
       </div>
+      <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }
