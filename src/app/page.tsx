@@ -212,8 +212,18 @@ export default function HomePage() {
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#f5f5f4", borderRadius: 10, padding: "12px 14px", marginTop: 24 }}>
           <span style={{ fontSize: "0.85rem", flexShrink: 0 }}>🔒</span>
           <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>
-            All plans are stored locally on this device. Nothing is sent to any server unless you create an account.
+            All plans are stored locally on this device. Nothing is sent to any server.
           </p>
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 24, textAlign: "center" as const }}>
+          <Link href="/privacy" style={{
+            fontFamily: "system-ui, sans-serif", fontSize: "0.72rem",
+            color: "#a8a29e", textDecoration: "none",
+          }}>
+            Privacy Notice
+          </Link>
         </div>
       </div>
     </div>
