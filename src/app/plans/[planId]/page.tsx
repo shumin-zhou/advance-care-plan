@@ -2,6 +2,7 @@
 
 import { usePlan } from "@/context/PlanContext";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import PinSetup from "@/components/PinSetup";
 import { PLAN_SECTIONS, AdvanceCarePlan } from "@/lib/schema";
 import Link from "next/link";
 
@@ -74,7 +75,7 @@ export default function PlanHomePage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #fdf8f3 0%, #f5ede0 50%, #fdf8f3 100%)" }}>
-      <div style={{ maxWidth: 520, margin: "0 auto", padding: "32px 16px 96px" }}>
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "32px 16px 200px" }}>
 
         {/* Header */}
         <header style={{ marginBottom: 28 }}>
@@ -178,6 +179,15 @@ export default function PlanHomePage() {
             );
           })}
         </div>
+
+        {/* PIN lock */}
+        <div style={{ marginTop: 16, background: "#fff", borderRadius: 16, border: "1px solid #e7e5e4", padding: "14px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase" as const, color: "#a8a29e", margin: "0 0 2px" }}>
+            {t("pinSetTitle")}
+          </p>
+          <PinSetup planId={planId} />
+        </div>
+
       </div>
 
       {/* Sticky bottom bar */}

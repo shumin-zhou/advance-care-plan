@@ -100,6 +100,48 @@ export function isStorageAvailable(): boolean {
   return typeof window !== "undefined" && "indexedDB" in window;
 }
 
+// ---------------------------------------------------------------------------
+// PIN lock — stored per plan in localStorage so it survives DB resets.
+// We store a simple hash — sufficient for local device privacy.
+// ---------------------------------------------------------------------------
+
+function pinKey(planId: string): string {
+  return `acp-pin-${planId}`;
+}
+
+function hashPin(pin: string): string {
+  let h = 0;
+  for (let i = 0; i < pin.length; i++) {
+    h = Math.imul(31, h) + pin.charCodeAt(i) | 0;
+  }
+  return h.toString(36);
+}
+
+export function getPinHash(planId: string): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem(pinKey(planId));
+}
+
+export function setPinHash(planId: string, pin: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(pinKey(planId), hashPin(pin));
+}
+
+export function removePinHash(planId: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.removeItem(pinKey(planId));
+}
+
+export function verifyPin(planId: string, pin: string): boolean {
+  const stored = getPinHash(planId);
+  if (!stored) return true; // no PIN — always unlocked
+  return stored === hashPin(pin);
+}
+
+export function hasPinSet(planId: string): boolean {
+  return getPinHash(planId) !== null;
+}
+
 /**
  * Nuclear option — delete the entire IndexedDB database.
  * Used by the settings page "Clear all data" and to recover from
