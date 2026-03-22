@@ -39,6 +39,7 @@ export default function ExportPage() {
   const [showEmailPanel, setShowEmailPanel] = useState(false);
   const [emailTo, setEmailTo] = useState("");
   const [emailStatus, setEmailStatus] = useState<"idle" | "generating" | "done" | "error">("idle");
+  const [attachBackup, setAttachBackup] = useState(false);
 
   const formSections = PLAN_SECTIONS.filter(s => s.key in SECTION_SLUGS);
   const incompleteSections = formSections.filter(
@@ -55,13 +56,27 @@ export default function ExportPage() {
     setErrorMsg("");
     try {
       const bytes = await generatePdf(plan);
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `advance-care-plan-${new Date().toISOString().slice(0, 10)}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const date = new Date().toISOString().slice(0, 10);
+      const safeName = plan.personalInfo?.surname ?? "plan";
+
+      // Download PDF
+      const pdfBlob = new Blob([bytes], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const pdfA = document.createElement("a");
+      pdfA.href = pdfUrl;
+      pdfA.download = `advance-care-plan-${safeName}-${date}.pdf`;
+      pdfA.click();
+      URL.revokeObjectURL(pdfUrl);
+
+      // Also download backup JSON
+      const json = JSON.stringify(plan, null, 2);
+      const jsonBlob = new Blob([json], { type: "application/json" });
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      const jsonA = document.createElement("a");
+      jsonA.href = jsonUrl;
+      jsonA.download = `advance-care-plan-backup-${safeName}-${date}.json`;
+      setTimeout(() => { jsonA.click(); URL.revokeObjectURL(jsonUrl); }, 400);
+
       setPdfStatus("done");
       setTimeout(() => setPdfStatus("idle"), 3000);
     } catch (err: any) {
@@ -100,46 +115,65 @@ export default function ExportPage() {
     setEmailStatus("generating");
     try {
       const bytes = await generatePdf(plan);
-      // Convert to base64 for mailto attachment
-      // Note: mailto: with attachments works in most desktop email clients.
-      // On mobile, we fall back to downloading then instructing the user to attach manually.
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const fileName = `advance-care-plan-${plan.personalInfo?.surname ?? "plan"}-${new Date().toISOString().slice(0,10)}.pdf`;
+      const date = new Date().toISOString().slice(0, 10);
+      const safeName = plan.personalInfo?.surname ?? "plan";
+      const pdfBlob = new Blob([bytes], { type: "application/pdf" });
+      const pdfFileName = `advance-care-plan-${safeName}-${date}.pdf`;
+      const jsonFileName = `advance-care-plan-backup-${safeName}-${date}.json`;
 
-      // Try the modern File System / share API on mobile
-      if (navigator.share && navigator.canShare?.({ files: [new File([blob], fileName, { type: "application/pdf" })] })) {
+      // Build file list for share API
+      const files: File[] = [new File([pdfBlob], pdfFileName, { type: "application/pdf" })];
+      if (attachBackup) {
+        const json = JSON.stringify(plan, null, 2);
+        const jsonBlob = new Blob([json], { type: "application/json" });
+        files.push(new File([jsonBlob], jsonFileName, { type: "application/json" }));
+      }
+
+      // Try Web Share API on mobile
+      if (navigator.share && navigator.canShare?.({ files })) {
         await navigator.share({
           title: `Advance Care Plan — ${name}`,
           text: `Please find attached the Advance Care Plan for ${name}.`,
-          files: [new File([blob], fileName, { type: "application/pdf" })],
+          files,
         });
         setEmailStatus("done");
         setTimeout(() => setEmailStatus("idle"), 3000);
         return;
       }
 
-      // Desktop: download the PDF then open mailto so user can attach it
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
+      // Desktop: download files then open mailto
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const pdfA = document.createElement("a");
+      pdfA.href = pdfUrl;
+      pdfA.download = pdfFileName;
+      pdfA.click();
+      URL.revokeObjectURL(pdfUrl);
 
-      // Open mailto after short delay so download initiates first
+      if (attachBackup) {
+        const json = JSON.stringify(plan, null, 2);
+        const jsonBlob = new Blob([json], { type: "application/json" });
+        const jsonUrl = URL.createObjectURL(jsonBlob);
+        const jsonA = document.createElement("a");
+        jsonA.href = jsonUrl;
+        jsonA.download = jsonFileName;
+        setTimeout(() => { jsonA.click(); URL.revokeObjectURL(jsonUrl); }, 400);
+      }
+
       setTimeout(() => {
         const subject = encodeURIComponent(`Advance Care Plan — ${name}`);
-        const body = encodeURIComponent(
-          `Please find attached the Advance Care Plan for ${name}.
+        const bodyText = attachBackup
+          ? `Please find attached the Advance Care Plan PDF and backup file for ${name}.
 
-` +
-          `The PDF has been downloaded to your device. Please attach it to this email before sending.
+Both files have been downloaded to your device. Please attach them to this email before sending.
 
-` +
-          `This plan was created using the My Advance Care Plan app.`
-        );
-        window.location.href = `mailto:${encodeURIComponent(emailTo)}?subject=${subject}&body=${body}`;
-      }, 500);
+This plan was created using the My Advance Care Plan app.`
+          : `Please find attached the Advance Care Plan for ${name}.
+
+The PDF has been downloaded to your device. Please attach it to this email before sending.
+
+This plan was created using the My Advance Care Plan app.`;
+        window.open(`mailto:${encodeURIComponent(emailTo)}?subject=${subject}&body=${encodeURIComponent(bodyText)}`, '_blank');
+      }, 600);
 
       setEmailStatus("done");
       setTimeout(() => setEmailStatus("idle"), 4000);
@@ -257,14 +291,14 @@ export default function ExportPage() {
             {pdfStatus === "generating" ? (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block", animation: "spin 1s linear infinite" }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round" /></svg>
-                Generating PDF…
+                {t("generatingLabel")}
               </>
             ) : pdfStatus === "done" ? (
               <>{t("exportComplete")}</>
             ) : (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                Download PDF
+                {t("downloadPdfAndBackup")}
               </>
             )}
           </button>
@@ -282,7 +316,7 @@ export default function ExportPage() {
             }}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.056 48.056 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
-            Print
+            {t("printLabel")}
           </button>
 
           {/* Email */}
@@ -299,16 +333,26 @@ export default function ExportPage() {
             }}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-            Email PDF
+            {t("emailPdfLabel")}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block", marginLeft: "auto", transform: showEmailPanel ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
           </button>
 
           {/* Email panel */}
           {showEmailPanel && (
             <div style={{ background: "#f5f5f4", border: "1.5px solid #e7e5e4", borderTop: "none", borderRadius: "0 0 14px 14px", padding: "16px" }}>
-              <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.78rem", color: "#78716c", margin: "0 0 10px", lineHeight: 1.5 }}>
-                On mobile, this will open your share sheet to send the PDF directly. On desktop, the PDF will download and your email app will open — attach the file before sending.
+              <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.78rem", color: "#78716c", margin: "0 0 12px", lineHeight: 1.5 }}>
+                {t("emailPanelNote")}
               </p>
+              {/* Attach backup option */}
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#57534e" }}>
+                <input
+                  type="checkbox"
+                  checked={attachBackup}
+                  onChange={e => setAttachBackup(e.target.checked)}
+                  style={{ width: 16, height: 16, accentColor: "#c0392b", cursor: "pointer" }}
+                />
+                {t("attachBackupJson")}
+              </label>
               <div style={{ display: "flex", gap: 8 }}>
                 <input
                   type="email"
@@ -331,18 +375,28 @@ export default function ExportPage() {
                     flexShrink: 0,
                   }}
                 >
-                  {emailStatus === "generating" ? "…" : emailStatus === "done" ? "✓ Sent" : t("send")}
+                  {emailStatus === "generating" ? "…" : emailStatus === "done" ? t("emailSentLabel") : t("send")}
                 </button>
               </div>
               {emailStatus === "error" && (
                 <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#c0392b", margin: "8px 0 0" }}>
-                  Something went wrong. Try downloading the PDF and emailing it manually.
+                  {t("emailErrorNote")}
                 </p>
               )}
               {emailStatus === "done" && (
-                <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#16a34a", margin: "8px 0 0" }}>
-                  ✓ Email app opened. Attach the downloaded PDF before sending.
-                </p>
+                <div style={{ marginTop: 12, borderRadius: 10, overflow: "hidden", border: "1px solid #bbf7d0" }}>
+                  <div style={{ background: "#dcfce7", padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: "1rem", flexShrink: 0 }}>✅</span>
+                    <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", fontWeight: 700, color: "#15803d", margin: 0 }}>
+                      {t("emailDoneBanner")}
+                    </p>
+                  </div>
+                  <div style={{ background: "#f0fdf4", padding: "10px 14px" }}>
+                    <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#166534", margin: 0, lineHeight: 1.6 }}>
+                      {t("emailDoneDetail")}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -359,7 +413,7 @@ export default function ExportPage() {
             }}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
-            Save backup file (.json)
+            {t("saveBackupLabel")}
           </button>
         </div>
 
@@ -371,7 +425,8 @@ export default function ExportPage() {
             { n: "2", text: t("step2") },
             { n: "3", text: t("step3") },
             { n: "4", text: t("step4") },
-            { n: "5", text: "Tell your family/whānau and EPA where to find it." },
+            { n: "5", text: t("step5") },
+            { n: "5b", text: t("step5b") },
             { n: "6", text: t("step6") },
           ].map(step => (
             <div key={step.n} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
