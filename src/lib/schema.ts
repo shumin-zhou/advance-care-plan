@@ -252,10 +252,14 @@ export const emptyPlan: AdvanceCarePlan = {
   personalInfo: {
     surname: "",
     firstNames: "",
+    dateOfBirth: "",
+    address: "",
+    phone: "",
+    email: "",
   },
   epa: { attorneys: [] },
   careContacts: {
-    contacts: [{}, {}, {}, {}],
+    contacts: [],
   },
   will: {},
   personalWishes: {},
@@ -265,7 +269,7 @@ export const emptyPlan: AdvanceCarePlan = {
   bodyCareFuneral: {},
   organDonation: {},
   treatmentPreferences: {
-    rows: [{}],
+    rows: [{ wouldOrWouldNotWant: "", inTheseCircumstances: "" }],
   },
   signature: {
     acknowledgement1: false,

@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { listPlans, createPlan, deletePlanById, importPlanFromJson, PlanSummary } from "@/lib/storage";
 import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
 
-function formatDate(iso?: string): string {
+function formatDate(iso: string | undefined, t: (k: any) => any): string {
   if (!iso) return t("notYetSaved");
   return new Date(iso).toLocaleDateString("en-NZ", {
     day: "numeric", month: "long", year: "numeric",
@@ -14,6 +15,7 @@ function formatDate(iso?: string): string {
 }
 
 function PlanCard({ plan, onDelete }: { plan: PlanSummary; onDelete: (id: string) => void }) {
+  const { t } = useLanguage();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
@@ -31,7 +33,7 @@ function PlanCard({ plan, onDelete }: { plan: PlanSummary; onDelete: (id: string
               {plan.displayName}
             </p>
             <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#a8a29e", margin: 0 }}>
-              Last updated {formatDate(plan.updatedAt)}
+              {t("lastUpdated")} {formatDate(plan.updatedAt, t)}
             </p>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block", flexShrink: 0, color: "#d4d4d0", marginTop: 2 }}>
@@ -160,7 +162,7 @@ export default function HomePage() {
               No plans yet
             </p>
             <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: "0 0 20px", lineHeight: 1.5 }}>
-              Create a plan for yourself or someone you're helping.
+              Create a plan for yourself or someone you&apos;re helping.
             </p>
             <button onClick={handleCreate} disabled={creating}
               style={{ padding: "11px 24px", borderRadius: 10, background: "#c0392b", border: "none", cursor: creating ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: 700, color: "#fff" }}>

@@ -60,7 +60,8 @@ export default function ExportPage() {
       const safeName = plan.personalInfo?.surname ?? "plan";
 
       // Download PDF
-      const pdfBlob = new Blob([bytes], { type: "application/pdf" });
+      const pdfBytes = new Uint8Array(bytes);
+      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const pdfA = document.createElement("a");
       pdfA.href = pdfUrl;
@@ -90,7 +91,8 @@ export default function ExportPage() {
     setPdfStatus("generating");
     try {
       const bytes = await generatePdf(plan);
-      const blob = new Blob([bytes], { type: "application/pdf" });
+      const pdfArr = new Uint8Array(bytes);
+      const blob = new Blob([pdfArr], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const iframe = document.createElement("iframe");
       iframe.style.display = "none";
@@ -117,7 +119,8 @@ export default function ExportPage() {
       const bytes = await generatePdf(plan);
       const date = new Date().toISOString().slice(0, 10);
       const safeName = plan.personalInfo?.surname ?? "plan";
-      const pdfBlob = new Blob([bytes], { type: "application/pdf" });
+      const pdfBytes = new Uint8Array(bytes);
+      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
       const pdfFileName = `advance-care-plan-${safeName}-${date}.pdf`;
       const jsonFileName = `advance-care-plan-backup-${safeName}-${date}.json`;
 
