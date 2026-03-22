@@ -1,4 +1,7 @@
 "use client";
+import React from "react";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Export / Share — /plans/[planId]/export

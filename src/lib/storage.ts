@@ -53,6 +53,9 @@ interface AcpDB extends DBSchema {
 let dbPromise: Promise<IDBPDatabase<AcpDB>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<AcpDB>> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("IndexedDB is not available on the server"));
+  }
   if (!dbPromise) {
     dbPromise = openDB<AcpDB>(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion) {
