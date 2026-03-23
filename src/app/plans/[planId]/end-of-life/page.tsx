@@ -178,7 +178,7 @@ export default function EndOfLifePage() {
 
             {dyingPrefs.includes("other") && (
               <div style={{ marginTop: 12 }}>
-                <TextInput placeholder={t("otherPlaceholder")} {...register("dyingPreferencesOther")} />
+                <TextareaInput placeholder={t("otherPlaceholder")} {...register("dyingPreferencesOther")} onBlur={onFieldBlur} />
               </div>
             )}
           </div>
