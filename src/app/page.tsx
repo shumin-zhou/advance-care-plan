@@ -144,6 +144,31 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Intro summary — shown only before any plans exist */}
+        {!loading && plans.length === 0 && (
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: "20px 20px 18px", marginBottom: 20 }}>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: "1rem", fontWeight: 600, color: "#1c1917", margin: "0 0 10px", lineHeight: 1.4 }}>
+              {t("introTitle")}
+            </p>
+            <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.82rem", color: "#57534e", margin: "0 0 14px", lineHeight: 1.6 }}>
+              {t("introBody")}
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {([
+                { icon: "🤍", key: "introBullet1" },
+                { icon: "🏠", key: "introBullet2" },
+                { icon: "📋", key: "introBullet3" },
+                { icon: "🔒", key: "introBullet4" },
+              ] as const).map(({ icon, key }) => (
+                <div key={key} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ fontSize: "0.9rem", flexShrink: 0, lineHeight: 1.6 }}>{icon}</span>
+                  <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", margin: 0, lineHeight: 1.6 }}>{t(key)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Error */}
         {error && (
           <div style={{ background: "#fff8f7", border: "1px solid #fecaca", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#c0392b", display: "flex", justifyContent: "space-between" }}>

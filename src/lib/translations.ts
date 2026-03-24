@@ -74,6 +74,12 @@ const translations = {
     deletePlanConfirm: "Delete this plan?",
     exportPdf: "Export PDF",
     privacyNote: "All plans are stored locally on this device. Nothing is sent to any server unless you create an account.",
+    introTitle: "Record your wishes before you need them",
+    introBody: "This app helps you record your personal and medical wishes for a time when you may not be able to speak for yourself — due to serious illness, injury, or the end of life.",
+    introBullet1: "Tell your healthcare team and whānau exactly what matters to you",
+    introBullet2: "Record where you'd like to be cared for, and your funeral wishes",
+    introBullet3: "Export a PDF to share with your GP or keep with your important documents",
+    introBullet4: "Everything stays on this device — nothing is sent to any server",
 
     // ── Per-Plan Home ─────────────────────────────────────────────────────
     planComplete: "Plan complete",
@@ -473,6 +479,12 @@ const translations = {
     deletePlanConfirm: "删除此计划？",
     exportPdf: "导出 PDF",
     privacyNote: "所有计划均保存在此设备本地。除非您创建账户，否则不会向任何服务器发送数据。",
+    introTitle: "提前记录您的意愿",
+    introBody: "此应用帮助您记录个人及医疗意愿，以备您因重病、意外或生命终结而无法表达时使用。",
+    introBullet1: "告知您的医疗团队和家人/whānau 您最重视的事情",
+    introBullet2: "记录您希望在哪里接受照护，以及您的身后事安排",
+    introBullet3: "导出 PDF，与您的家庭医生分享或与重要文件一同保存",
+    introBullet4: "所有内容保存在此设备上，不会发送至任何服务器",
 
     // ── Per-Plan Home ─────────────────────────────────────────────────────
     planComplete: "计划已完成",
