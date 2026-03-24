@@ -136,9 +136,6 @@ export default function HomePage() {
           <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.75rem", fontWeight: 700, color: "#1c1917", margin: 0, lineHeight: 1.2 }}>
             Advance Care Plans
           </h1>
-          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: "8px 0 0", lineHeight: 1.5 }}>
-            {t("planSelectorSubtitle")}
-          </p>
           <div style={{ marginTop: 12 }}>
             <LanguageSwitcher />
           </div>
