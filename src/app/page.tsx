@@ -183,10 +183,10 @@ export default function HomePage() {
           <div style={{ background: "#fff", borderRadius: 14, border: "1.5px dashed #e7e5e4", padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
             <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>📋</div>
             <p style={{ fontFamily: "Georgia, serif", fontSize: "1rem", fontWeight: 600, color: "#1c1917", margin: "0 0 6px" }}>
-              No plans yet
+              {t("noPlansYet")}
             </p>
             <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: "0 0 20px", lineHeight: 1.5 }}>
-              Create a plan for yourself or someone you&apos;re helping.
+              {t("noPlansDescription")}
             </p>
             <button onClick={handleCreate} disabled={creating}
               style={{ padding: "11px 24px", borderRadius: 10, background: "#c0392b", border: "none", cursor: creating ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: 700, color: "#fff" }}>
@@ -241,13 +241,21 @@ export default function HomePage() {
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 24, textAlign: "center" as const }}>
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
           <Link href="/privacy" style={{
             fontFamily: "system-ui, sans-serif", fontSize: "0.72rem",
             color: "#a8a29e", textDecoration: "none",
           }}>
             Privacy Notice
           </Link>
+          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.72rem", color: "#a8a29e", margin: 0, lineHeight: 1.5, textAlign: "center" as const }}>
+            Adapted from the official NZ Advance Care Plan at{" "}
+            <a href="https://www.myacp.org.nz/" target="_blank" rel="noopener noreferrer"
+              style={{ color: "#a8a29e", textDecoration: "underline" }}>
+              myacp.org.nz
+            </a>
+            , a programme of Health New Zealand | Te Whatu Ora.
+          </p>
         </div>
       </div>
     </div>

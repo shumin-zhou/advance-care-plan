@@ -134,6 +134,12 @@ function drawPageHeader(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan, page
     size: 8, font: fonts.regular, color: WHITE,
   });
 
+  // Attribution footer
+  page.drawText("Adapted from the official NZ Advance Care Plan — myacp.org.nz — Health New Zealand | Te Whatu Ora", {
+    x: MARGIN, y: 14,
+    size: 6.5, font: fonts.regular, color: MID,
+  });
+
   // Mini identity block (top-right on pages 2-4, top on page 1)
   if (pageNum > 1) {
     const pi = plan.personalInfo;
@@ -173,7 +179,7 @@ function drawCoverContent(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
   y -= 24;
 
   // Intro paragraph
-  const intro = "Use this plan to write down what you want health professionals, friends and family/whānau to know if you could no longer tell them yourself.";
+  const intro = "Use this plan to write down what you want health professionals, friends and family to know if you could no longer tell them yourself.";
   y = drawWrappedText(page, fonts.regular, intro, MARGIN, y, CONTENT_W, 9, MID) - 10;
 
   // Red divider
@@ -420,9 +426,37 @@ async function drawPage4(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan, doc
   const rows = plan.treatmentPreferences.rows.filter(r => r.wouldOrWouldNotWant || r.inTheseCircumstances);
   const displayRows = rows.length > 0 ? rows.slice(0, 8) : [{ wouldOrWouldNotWant: "", inTheseCircumstances: "" }];
 
-  for (let i = 0; i < Math.max(displayRows.length, 6); i++) {
+  // Ensure we show at least 6 rows
+  while (displayRows.length < 6) displayRows.push({ wouldOrWouldNotWant: "", inTheseCircumstances: "" });
+
+  // Helper: measure how many pixels drawWrappedText will consume for a string
+  function measureWrappedHeight(text: string, font: typeof fonts.regular, maxWidth: number, size: number): number {
+    if (!text) return size + 3;
+    const words = text.split(" ");
+    let line = "";
+    let lines = 0;
+    for (const word of words) {
+      const testLine = line ? `${line} ${word}` : word;
+      if (font.widthOfTextAtSize(testLine, size) > maxWidth && line) {
+        lines++;
+        line = word;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) lines++;
+    return lines * (size + 3);
+  }
+
+  const MIN_ROW_H = 22;
+  const TEXT_PADDING = 6; // top + bottom padding inside row
+
+  for (let i = 0; i < displayRows.length; i++) {
     const row = displayRows[i] ?? {};
-    const rowH = 22;
+    const leftH  = measureWrappedHeight(row.wouldOrWouldNotWant ?? "", fonts.regular, colW - 8, 7.5);
+    const rightH = measureWrappedHeight(row.inTheseCircumstances ?? "", fonts.regular, colW - 8, 7.5);
+    const rowH = Math.max(MIN_ROW_H, leftH + TEXT_PADDING, rightH + TEXT_PADDING);
+
     const bg = i % 2 === 0 ? WHITE : rgb(0.97, 0.96, 0.95);
     page.drawRectangle({ x: MARGIN, y: y - rowH + 4, width: CONTENT_W, height: rowH, color: bg, borderColor: LIGHT, borderWidth: 0.3 });
     page.drawRectangle({ x: MARGIN + colW + 8, y: y - rowH + 4, width: 0.5, height: rowH, color: LIGHT });
@@ -527,7 +561,7 @@ function drawCheckbox(page: PDFPage, fonts: Fonts, x: number, y: number, label: 
   if (checked) {
     page.drawText("✓", { x: x + 1, y: y - 1, size: 6, font: fonts.bold, color: WHITE });
   }
-  page.drawText(label, { x: x + 12, y, size: 7.5, font: fonts.regular, color: DARK });
+  page.drawText(label, { x: x + 12, y, size: 7.5, font: fonts.noLigature, color: DARK });
 }
 
 function drawField(

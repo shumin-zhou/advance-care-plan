@@ -118,6 +118,31 @@ To give your plan the strongest possible standing, print the PDF, sign it by han
           </div>
         ))}
 
+        {/* Attribution */}
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={{
+            fontFamily: "Georgia, serif", fontSize: "1.1rem",
+            fontWeight: 700, color: "#1c1917", margin: "0 0 8px",
+          }}>
+            About this app
+          </h2>
+          <p style={{
+            fontFamily: "system-ui, sans-serif", fontSize: "0.875rem",
+            color: "#57534e", margin: 0, lineHeight: 1.8,
+          }}>
+            This app is adapted from the official New Zealand{" "}
+            <a href="https://www.myacp.org.nz/" target="_blank" rel="noopener noreferrer"
+              style={{ color: "#c0392b", textDecoration: "underline" }}>
+              My Advance Care Plan (Tō Tātou Reo)
+            </a>
+            {" "}form, a programme of Health New Zealand | Te Whatu Ora. It is an independent digital tool and is not officially endorsed by or affiliated with Health New Zealand. The form structure, section content, and terminology are based on the official paper form available at{" "}
+            <a href="https://www.myacp.org.nz/" target="_blank" rel="noopener noreferrer"
+              style={{ color: "#c0392b", textDecoration: "underline" }}>
+              myacp.org.nz
+            </a>.
+          </p>
+        </div>
+
         {/* Footer rule */}
         <div style={{ borderTop: "1px solid #e7e5e4", paddingTop: 24, marginTop: 12 }}>
           <p style={{
