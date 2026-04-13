@@ -4,13 +4,13 @@ export const dynamic = "force-dynamic";
 import React from "react";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { usePlan } from "@/context/PlanContext";
-import { useLanguage, LanguageSwitcher } from "@/context/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { SupportTrigger, SupportPanel } from "@/components/SupportPanel";
-import { willSchema, Will } from "@/lib/schema";
+import { importantDocumentsSchema, ImportantDocuments } from "@/lib/schema";
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -56,52 +56,29 @@ function TextareaInput({ id, placeholder, error, ref: externalRef, ...rest }: Re
   );
 }
 
-function ToggleGroup({ value, onChange, options }: { value?: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
-  const { t } = useLanguage();
-  return (
-    <div style={{ display: "flex", gap: 10 }}>
-      {options.map(opt => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          style={{
-            flex: 1, padding: "11px", borderRadius: 10, border: `1.5px solid ${value === opt.value ? "#c0392b" : "#e7e5e4"}`,
-            background: value === opt.value ? "rgba(192,57,43,0.07)" : "#fff",
-            fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: value === opt.value ? 600 : 400,
-            color: value === opt.value ? "#c0392b" : "#78716c", cursor: "pointer",
-          }}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-export default function WillPage() {
+export default function ImportantDocumentsPage() {
   const { t } = useLanguage();
   const [supportOpen, setSupportOpen] = useState(false);
   const { plan, updateSection, status, isDirty, save, planId } = usePlan();
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<Will>({
-    resolver: zodResolver(willSchema),
-    defaultValues: plan.will,
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<ImportantDocuments>({
+    resolver: zodResolver(importantDocumentsSchema),
+    defaultValues: plan.importantDocuments,
   });
 
+  const { fields, append, remove } = useFieldArray({ control, name: "documents" });
+
   useEffect(() => {
-    reset(plan.will);
+    reset(plan.importantDocuments);
     requestAnimationFrame(() => {
       document.querySelectorAll<HTMLTextAreaElement>("textarea").forEach(el => {
         el.style.height = "auto";
         el.style.height = `${el.scrollHeight}px`;
       });
     });
-  }, [plan.will, reset]);
-
-  const hasMadeWill = watch("hasMadeWill");
+  }, [plan.importantDocuments, reset]);
 
   function onFieldBlur() {
-    handleSubmit((data) => updateSection({ will: data }))();
+    handleSubmit((data) => updateSection({ importantDocuments: data }))();
   }
 
   return (
@@ -109,7 +86,7 @@ export default function WillPage() {
       <div style={{ maxWidth: 520, margin: "0 auto", padding: "0 16px 96px" }}>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 8px", position: "sticky", top: 0, zIndex: 10, background: "rgba(253,248,243,0.92)", backdropFilter: "blur(8px)" }}>
-          <Link href={`/plans/${planId}/care-contacts`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+          <Link href={`/plans/${planId}/will`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
             {t("previous")}
           </Link>
@@ -126,7 +103,7 @@ export default function WillPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             {t("allPlans")}
           </Link>
-          <Link href={`/plans/${planId}/important-documents`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
+          <Link href={`/plans/${planId}/personal-wishes`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>
@@ -138,26 +115,71 @@ export default function WillPage() {
         </div>
 
         <div style={{ padding: "20px 0 28px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: "rgba(192,57,43,0.1)", fontSize: "1.3rem", marginBottom: 14 }}>📄</div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{t("willTitle")}</h1>
-          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>{t("willSubtitle")}</p>
+          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: "rgba(192,57,43,0.1)", fontSize: "1.3rem", marginBottom: 14 }}>📁</div>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{t("importantDocumentsTitle")}</h1>
+          <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.85rem", color: "#78716c", margin: 0, lineHeight: 1.5 }}>{t("importantDocumentsSubtitle")}</p>
         </div>
 
-        <form onBlur={onFieldBlur} onSubmit={handleSubmit((data) => updateSection({ will: data }))} noValidate>
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 20, marginBottom: 16 }}>
-            <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", color: "#1c1917", margin: "0 0 14px" }}>{t("haveMadeWill")}</p>
-            <ToggleGroup
-              value={hasMadeWill}
-              onChange={(v) => { setValue("hasMadeWill", v as "yes" | "no"); onFieldBlur(); }}
-              options={[{ value: "yes", label: t("yes") }, { value: "no", label: t("no") }]}
-            />
+        {/* Suggestions hint */}
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", color: "#92400e", lineHeight: 1.5 }}>
+          <span style={{ flexShrink: 0, lineHeight: 1.5 }}>💡</span>
+          <p style={{ margin: 0 }}>{t("documentSuggestions")}</p>
+        </div>
 
-            {hasMadeWill === "yes" && (
-              <div style={{ marginTop: 20 }}>
-                <FieldLabel htmlFor="heldBy">{t("whereIsWillHeld")}</FieldLabel>
-                <TextareaInput id="heldBy" placeholder={t("willHeldPlaceholder")} error={errors.heldBy?.message} {...register("heldBy")} />
+        <form onBlur={onFieldBlur} onSubmit={handleSubmit((data) => updateSection({ importantDocuments: data }))} noValidate>
+          {fields.map((field, index) => (
+            <div key={field.id} style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 20, marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <span style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, color: "#78716c" }}>
+                  {t("documentName")} {index + 1}
+                </span>
+                {fields.length > 1 && (
+                  <button type="button" onClick={() => { remove(index); onFieldBlur(); }}
+                    style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.7rem", color: "#c0392b", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                    {t("remove")}
+                  </button>
+                )}
               </div>
-            )}
+
+              <div style={{ marginBottom: 14 }}>
+                <FieldLabel htmlFor={`documents.${index}.documentName`}>{t("documentName")}</FieldLabel>
+                <TextInput
+                  id={`documents.${index}.documentName`}
+                  placeholder={t("documentNamePlaceholder")}
+                  error={errors.documents?.[index]?.documentName?.message}
+                  {...register(`documents.${index}.documentName`)}
+                />
+              </div>
+
+              <div>
+                <FieldLabel htmlFor={`documents.${index}.location`}>{t("documentLocation")}</FieldLabel>
+                <TextInput
+                  id={`documents.${index}.location`}
+                  placeholder={t("documentLocationPlaceholder")}
+                  error={errors.documents?.[index]?.location?.message}
+                  {...register(`documents.${index}.location`)}
+                />
+              </div>
+            </div>
+          ))}
+
+          {fields.length < 20 && (
+            <button type="button"
+              onClick={() => append({ documentName: "", location: "" })}
+              style={{ display: "flex", alignItems: "center", gap: 6, margin: "0 auto 16px", padding: "10px 18px", borderRadius: 10, border: "1.5px dashed #d4d4d4", background: "transparent", fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", cursor: "pointer" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              {t("addAnotherDocument")}
+            </button>
+          )}
+
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e7e5e4", padding: 20, marginBottom: 16 }}>
+            <FieldLabel htmlFor="notes">{t("importantDocumentsNotes")}</FieldLabel>
+            <TextareaInput
+              id="notes"
+              placeholder={t("importantDocumentsNotesPlaceholder")}
+              error={errors.notes?.message}
+              {...register("notes")}
+            />
           </div>
         </form>
       </div>
@@ -167,7 +189,7 @@ export default function WillPage() {
           {isDirty && (
             <button onClick={save} style={{ padding: "13px 18px", borderRadius: 12, border: "1.5px solid #e7e5e4", background: "#fff", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", fontWeight: 600, color: "#78716c", cursor: "pointer", flexShrink: 0 }}>{t("save")}</button>
           )}
-          <Link href={`/plans/${planId}/important-documents`} onClick={() => handleSubmit((data) => updateSection({ will: data }))()} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#c0392b", color: "#fff", borderRadius: 12, padding: "13px 20px", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}>
+          <Link href={`/plans/${planId}/personal-wishes`} onClick={() => handleSubmit((data) => updateSection({ importantDocuments: data }))()} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#c0392b", color: "#fff", borderRadius: 12, padding: "13px 20px", fontFamily: "system-ui, sans-serif", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}>
             Save & Continue
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block", flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </Link>

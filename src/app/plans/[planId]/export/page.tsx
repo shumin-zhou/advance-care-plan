@@ -316,8 +316,8 @@ This plan was created using the My Advance Care Plan app.`;
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
               width: "100%", padding: "13px 20px", borderRadius: 14,
-              background: "#fff", color: "#1c1917",
-              border: "1.5px solid #e7e5e4", cursor: isGenerating ? "not-allowed" : "pointer",
+              background: "#15803d", color: "#fff",
+              border: "1.5px solid #15803d", cursor: isGenerating ? "not-allowed" : "pointer",
               fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: 600,
             }}
           >
@@ -332,20 +332,21 @@ This plan was created using the My Advance Care Plan app.`;
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
               width: "100%", padding: "13px 20px", borderRadius: showEmailPanel ? "14px 14px 0 0" : 14,
-              background: showEmailPanel ? "#f5f5f4" : "#fff", color: "#1c1917",
-              border: "1.5px solid #e7e5e4", borderBottom: showEmailPanel ? "none" : "1.5px solid #e7e5e4",
+              background: showEmailPanel ? "#eff6ff" : "#1d4ed8", color: showEmailPanel ? "#1d4ed8" : "#fff",
+              border: showEmailPanel ? "1.5px solid #93c5fd" : "1.5px solid #1d4ed8", borderBottom: showEmailPanel ? "none" : "1.5px solid #1d4ed8",
               cursor: isGenerating ? "not-allowed" : "pointer",
               fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: 600,
             }}
           >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block", visibility: "hidden" }}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
             {t("emailPdfLabel")}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block", marginLeft: "auto", transform: showEmailPanel ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "block", transform: showEmailPanel ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
           </button>
 
           {/* Email panel */}
           {showEmailPanel && (
-            <div style={{ background: "#f5f5f4", border: "1.5px solid #e7e5e4", borderTop: "none", borderRadius: "0 0 14px 14px", padding: "16px" }}>
+            <div style={{ background: "#eff6ff", border: "1.5px solid #93c5fd", borderTop: "none", borderRadius: "0 0 14px 14px", padding: "16px" }}>
               <p style={{ fontFamily: "system-ui, sans-serif", fontSize: "0.78rem", color: "#78716c", margin: "0 0 12px", lineHeight: 1.5 }}>
                 {t("emailPanelNote")}
               </p>

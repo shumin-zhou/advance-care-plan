@@ -98,6 +98,7 @@ const translations = {
       epa:                  "Power of Attorney",
       careContacts:         "Care Decision Contacts",
       will:                 "Will",
+      importantDocuments:   "Important Documents",
       personalWishes:       "Personal Wishes",
       endOfLifePreferences: "End-of-Life Preferences",
       bodyCareFuneral:      "Body Care & Funeral",
@@ -173,6 +174,18 @@ const translations = {
     haveMadeWill: "Have you made a Will?",
     whereIsWillHeld: "Where is your Will held?",
     willHeldPlaceholder: "e.g. With my solicitor at Smith Law, Wellington",
+
+    // ── Important Documents ──────────────────────────────────────────────
+    importantDocumentsTitle: "Important Documents",
+    importantDocumentsSubtitle: "Record where your important documents and information are kept so your family can find them when needed.",
+    documentName: "Document",
+    documentLocation: "Where is it kept?",
+    documentNamePlaceholder: "e.g. Birth certificate",
+    documentLocationPlaceholder: "e.g. Top drawer of bedroom dresser",
+    addAnotherDocument: "Add another document",
+    importantDocumentsNotes: "Additional notes",
+    importantDocumentsNotesPlaceholder: "Any other details about where important items are kept…",
+    documentSuggestions: "Common documents to consider: birth certificate, passport, property deeds, bank account details, insurance policies, tax records, marriage certificate, vehicle registration, investment records, superannuation details, digital account passwords.",
 
     // ── Personal Wishes ───────────────────────────────────────────────────
     personalWishesTitle: "Personal Wishes",
@@ -409,7 +422,7 @@ const translations = {
     emailDoneBanner: "Files downloaded — now attach them to your email",
     emailDoneDetail: "Look in your Downloads folder for the file(s), then drag or attach them into the email before hitting send.",
     emailSentLabel: "✓ Sent",
-    printLabel: "Print",
+    printLabel: "Print PDF",
     emailPdfLabel: "Email PDF",
     saveBackupLabel: "Save backup file (.json)",
 
@@ -503,6 +516,7 @@ const translations = {
       epa:                  "授权书人",
       careContacts:         "医疗代理人",
       will:                 "遗嘱",
+      importantDocuments:   "重要文件",
       personalWishes:       "个人愿望",
       endOfLifePreferences: "临终选择",
       bodyCareFuneral:      "遗体护理与葬礼",
@@ -578,6 +592,18 @@ const translations = {
     haveMadeWill: "您是否已立遗嘱？",
     whereIsWillHeld: "您的遗嘱存放在哪里？",
     willHeldPlaceholder: "例如：存放在惠灵顿 Smith 律师事务所",
+
+    // ── Important Documents ──────────────────────────────────────────────
+    importantDocumentsTitle: "重要文件",
+    importantDocumentsSubtitle: "记录您重要文件和信息的存放位置，以便家人在需要时能够找到。",
+    documentName: "文件名称",
+    documentLocation: "存放在哪里？",
+    documentNamePlaceholder: "例如：出生证明",
+    documentLocationPlaceholder: "例如：卧室梳妆台顶部抽屉",
+    addAnotherDocument: "添加另一份文件",
+    importantDocumentsNotes: "其他备注",
+    importantDocumentsNotesPlaceholder: "关于重要物品存放位置的其他详情…",
+    documentSuggestions: "常见文件参考：出生证明、护照、房产证、银行账户信息、保险单、税务记录、结婚证、车辆登记、投资记录、养老金详情、数字账户密码。",
 
     // ── Personal Wishes ───────────────────────────────────────────────────
     personalWishesTitle: "Personal Wishes/您个人的意愿",
@@ -814,8 +840,8 @@ const translations = {
     emailDoneBanner: "文件已下载——请将其附加到您的电子邮件",
     emailDoneDetail: "在下载文件夹中找到文件，然后将其拖动或附加到电子邮件中，再点击发送。",
     emailSentLabel: "✓ 已发送",
-    printLabel: "打印",
-    emailPdfLabel: "发送计划书",
+    printLabel: "打印 PDF",
+    emailPdfLabel: "发送 PDF",
     saveBackupLabel: "保存备份文件（.json）",
 
     // ── Date Picker ───────────────────────────────────────────────────────

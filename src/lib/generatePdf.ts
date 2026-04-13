@@ -87,10 +87,10 @@ export async function generatePdf(plan: AdvanceCarePlan): Promise<Uint8Array> {
   drawPageHeader(p1, fonts, plan, 1);
   drawCoverContent(p1, fonts, plan);
 
-  // ---- Page 2: EPA, Care Contacts, Will, Personal Wishes ----
+  // ---- Page 2: EPA, Care Contacts, Will, Important Documents, Personal Wishes ----
   const p2 = newPage(doc);
   drawPageHeader(p2, fonts, plan, 2);
-  drawPage2(p2, fonts, plan);
+  drawPage2(p2, fonts, plan, doc);
 
   // ---- Page 3: End-of-Life, Body Care, Organ Donation ----
   const p3 = newPage(doc);
@@ -209,9 +209,19 @@ function drawCoverContent(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
 // Page 2 — EPA, Care Contacts, Will, Personal Wishes
 // ---------------------------------------------------------------------------
 
-function drawPage2(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
-  const { page } = ps;
+function drawPage2(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan, doc: PDFDocument) {
+  let { page } = ps;
   let y = ps.y;
+
+  // Overflow guard: if y is too low, start a continuation page
+  function checkOverflow() {
+    if (y < MARGIN + 40) {
+      const np = newPage(doc);
+      drawPageHeader(np, fonts, plan, 2);
+      page = np.page;
+      y = np.y;
+    }
+  }
 
   // EPA — iterate over attorneys grouped by type
   const attorneys = plan.epa?.attorneys ?? [];
@@ -267,6 +277,7 @@ function drawPage2(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
   y -= 8;
 
   // Will
+  checkOverflow();
   drawSectionHeading(page, fonts, MARGIN, y, "Will");
   y -= 18;
   y = drawField(page, fonts, MARGIN, y, "Made a Will", plan.will.hasMadeWill === "yes" ? "Yes" : plan.will.hasMadeWill === "no" ? "No" : "—", CONTENT_W);
@@ -275,14 +286,38 @@ function drawPage2(ps: PageState, fonts: Fonts, plan: AdvanceCarePlan) {
   }
   y -= 8;
 
+  // Important Documents
+  checkOverflow();
+  drawSectionHeading(page, fonts, MARGIN, y, "Important Documents");
+  y -= 18;
+  const docs = plan.importantDocuments?.documents ?? [];
+  const filledDocs = docs.filter(d => d.documentName || d.location);
+  if (filledDocs.length > 0) {
+    for (const d of filledDocs) {
+      checkOverflow();
+      y = drawField(page, fonts, MARGIN, y, d.documentName ?? "Document", d.location ?? "", CONTENT_W);
+    }
+  } else {
+    y = drawField(page, fonts, MARGIN, y, "", "— No documents recorded —", CONTENT_W);
+  }
+  if (plan.importantDocuments?.notes) {
+    checkOverflow();
+    y = drawField(page, fonts, MARGIN, y, "Notes", plan.importantDocuments.notes, CONTENT_W, true);
+  }
+  y -= 8;
+
   // Personal wishes
+  checkOverflow();
   drawSectionHeading(page, fonts, MARGIN, y, "Personal Wishes");
   y -= 18;
   const pw = plan.personalWishes;
   y = drawField(page, fonts, MARGIN, y, "What is important to me", pw.importantToMe ?? "", CONTENT_W, true);
+  checkOverflow();
   y = drawField(page, fonts, MARGIN, y, "What makes life meaningful to me", pw.meaningfulToMe ?? "", CONTENT_W, true);
+  checkOverflow();
   y = drawField(page, fonts, MARGIN, y, "What I want family and friends to know", pw.familyAndFriendsMessage ?? "", CONTENT_W, true);
 
+  ps.page = page;
   ps.y = y;
 }
 

@@ -198,6 +198,9 @@ export function migratePlanShape(plan: any): AdvanceCarePlan {
     const hasData = attorney.firstNames || attorney.lastName;
     plan = { ...plan, epa: { attorneys: hasData ? [attorney] : [] } };
   }
+  if (!plan.importantDocuments) {
+    plan = { ...plan, importantDocuments: { documents: [{ documentName: "", location: "" }] } };
+  }
   return plan as AdvanceCarePlan;
 }
 

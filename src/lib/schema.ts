@@ -92,6 +92,24 @@ export const willSchema = z.object({
 export type Will = z.infer<typeof willSchema>;
 
 // ---------------------------------------------------------------------------
+// 3.5b Important Documents
+// ---------------------------------------------------------------------------
+
+export const importantDocumentSchema = z.object({
+  documentName: optionalString,
+  location: optionalString,
+});
+
+export type ImportantDocument = z.infer<typeof importantDocumentSchema>;
+
+export const importantDocumentsSchema = z.object({
+  documents: z.array(importantDocumentSchema).max(20),
+  notes: optionalString,
+});
+
+export type ImportantDocuments = z.infer<typeof importantDocumentsSchema>;
+
+// ---------------------------------------------------------------------------
 // 3.6 Personal Wishes
 // ---------------------------------------------------------------------------
 
@@ -233,6 +251,7 @@ export const advanceCarePlanSchema = z.object({
   epa: epaSchema,
   careContacts: careContactsSchema,
   will: willSchema,
+  importantDocuments: importantDocumentsSchema,
   personalWishes: personalWishesSchema,
   endOfLifePreferences: endOfLifePreferencesSchema,
   bodyCareFuneral: bodyCareFuneralSchema,
@@ -262,6 +281,7 @@ export const emptyPlan: AdvanceCarePlan = {
     contacts: [],
   },
   will: {},
+  importantDocuments: { documents: [{ documentName: "", location: "" }], },
   personalWishes: {},
   endOfLifePreferences: {
     dyingPreferences: [],
@@ -294,6 +314,10 @@ export function isSectionComplete(plan: AdvanceCarePlan, section: keyof AdvanceC
       return plan.careContacts.contacts.some((c) => c.firstName || c.lastName);
     case "will":
       return plan.will.hasMadeWill !== undefined;
+    case "importantDocuments":
+      return plan.importantDocuments.documents.some(
+        (d) => d.documentName || d.location
+      );
     case "personalWishes":
       return !!(
         plan.personalWishes.importantToMe ||
@@ -331,6 +355,7 @@ export const PLAN_SECTIONS: { key: keyof AdvanceCarePlan; label: string }[] = [
   { key: "epa",                   label: "Power of Attorney" },
   { key: "careContacts",          label: "Care Decision Contacts" },
   { key: "will",                  label: "Will" },
+  { key: "importantDocuments",    label: "Important Documents" },
   { key: "personalWishes",        label: "Personal Wishes" },
   { key: "endOfLifePreferences",  label: "End-of-Life Preferences" },
   { key: "bodyCareFuneral",       label: "Body Care & Funeral" },
