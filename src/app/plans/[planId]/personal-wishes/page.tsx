@@ -94,7 +94,7 @@ function ExamplesPanel({ examples }: { examples: string[] }) {
 export default function PersonalWishesPage() {
   const { t } = useLanguage();
   const [supportOpen, setSupportOpen] = useState(false);
-  const { plan, updateSection, status, isDirty, save, planId } = usePlan();
+  const { plan, updateSection, status, isDirty, save, planId, exportJson } = usePlan();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PersonalWishes>({
     resolver: zodResolver(personalWishesSchema),
     defaultValues: plan.personalWishes,
@@ -142,6 +142,9 @@ export default function PersonalWishesPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             {t("allPlans")}
           </Link>
+          <button onClick={exportJson} title={t("backup")} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 6, borderRadius: 6, border: "1px solid #e7e5e4", background: "#fff", color: "#78716c", cursor: "pointer", flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+          </button>
           <Link href={`/plans/${planId}/end-of-life`} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "system-ui, sans-serif", fontSize: "0.8rem", color: "#78716c", textDecoration: "none" }}>
             {t("next")}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>

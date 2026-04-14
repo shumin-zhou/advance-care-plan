@@ -414,8 +414,8 @@ This plan was created using the My Advance Care Plan app.`;
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
               width: "100%", padding: "13px 20px", borderRadius: 14,
-              background: "#fff", color: "#78716c",
-              border: "1.5px solid #e7e5e4", cursor: "pointer",
+              background: "#2563eb", color: "#fff",
+              border: "1.5px solid #2563eb", cursor: "pointer",
               fontFamily: "system-ui, sans-serif", fontSize: "0.9rem", fontWeight: 600,
             }}
           >
